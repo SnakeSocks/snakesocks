@@ -21,19 +21,23 @@ Download and unpack snakesocks from [here](https://github.com/snakesocks/snakeso
 ## Build from source
 
 - client
+
 ```sh
 git clone https://github.com/snakesocks/snakesocks
 cd snakesocks
 make client
 sudo make install
 ```
+
 - server
+
 ```sh
 git clone https://github.com/snakesocks/snakesocks
 cd snakesocks
 make server
 sudo make install
 ```
+
 ## Install and use modules
 
 [TODO]
