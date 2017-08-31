@@ -1,7 +1,5 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.2)
 
-#set(CMAKE_C_COMPILER "C:\\\\\\\\MinGW\\\\\\\\bin\\\\\\\\fake_gcc.sh")
-#set(CMAKE_CXX_COMPILER "C:\\\\\\\\MinGW\\\\\\\\bin\\\\\\\\fake_g++.sh")
 set(BOOST_ROOT "C:\\\\bash_home\\\\boost_1_64_0")
 set(BOOST_LIBRARYDIR "C:\\\\bash_home\\\\boost_1_64_0\\\\bin.v2\\\\libs")
 
@@ -37,8 +35,6 @@ find_package(Threads REQUIRED)
 set(CLIENT_SRC src/client.cc src/socks5.cc src/tunnel.cc src/module.cc src/lib/NetLib.cc)
 add_executable(skcli ${CLIENT_SRC})
 target_link_libraries(skcli Threads::Threads)
-#target_link_libraries(skcli Boost::system)
 target_link_libraries(skcli "C:\\bash_home\\boost_1_64_0\\bin.v2\\libs\\system\\build\\gcc-mingw-6.3.0\\release\\link-static\\threading-multi\\libboost_system-mgw63-mt-1_64.a")
-#target_link_libraries(skcli "C:\\bash_home\\snakesocks-windows\\dlfcn-win32\\libdl.a")
 target_link_libraries(skcli Ws2_32.lib)
 target_link_libraries(skcli psapi.lib)
