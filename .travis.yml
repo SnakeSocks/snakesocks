@@ -1,0 +1,35 @@
+language: cpp
+before_script: ls /usr/include/boost
+script: make client && make server ###fuck silly travis### && sudo make install
+
+matrix:
+  include:
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-7
+            - g++-7
+            - libboost1.54-all-dev
+            - golang-go
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+before_install:
+    - eval "${MATRIX_EVAL}"
+
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+    packages:
+      - cmake-data
+      - cmake
+
+notifications:
+  email:
+    - mihe87113@gmail.com
+# Tip: This email is just a temporary address, which should only be used for forwarding email anonymously to snakesocks developer.

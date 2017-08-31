@@ -1,0 +1,40 @@
+prefix=/etc/snakesocks
+
+def:
+	echo 'Usage: "make server" or "make client"' && exit 1
+
+server:
+	cd src/server && $(MAKE) skserver && cd -
+
+client:
+	cd src/client && cmake . -DCMAKE_BUILD_TYPE=Release && $(MAKE) && cd -
+
+init_dir:
+	mkdir -p $(prefix)/modules; mkdir -p $(prefix)/conf
+
+install: init_dir
+	[ -f src/client/skcli ] && $(inst_cli)
+	[ -f src/server/sksrv ] && $(inst_srv)
+
+define inst_srv =
+	cp src/server/sksrv $(prefix)/sksrv ;\
+	CONF_NAME='server.conf' ;\
+	[ -f $(prefix)/conf/server.conf ] && CONF_NAME="$$CONF_NAME"'.new' ;\
+	cp src/server/example.conf $(prefix)/conf/$$CONF_NAME ;\
+	[ -L /usr/bin/sksrv ] || ln -s $(prefix)/sksrv /usr/bin/sksrv
+endef
+
+define inst_cli =
+	cp src/client/skcli $(prefix)/skcli ;\
+	CONF_NAME='client.conf' ;\
+	[ -f $(prefix)/conf/client.conf ] && CONF_NAME="$$CONF_NAME"'.new' ;\
+	cp src/client/example.conf $(prefix)/conf/$$CONF_NAME ;\
+	[ -L /usr/bin/skcli ] || ln -s $(prefix)/skcli /usr/bin/skcli
+endef
+
+uninstall:
+	rm -rf /etc/snakesocks /usr/bin/skcli /usr/bin/sksrv
+
+clean:
+	cd src/server && $(MAKE) clean && cd -
+	cd src/client && ./cmake_clean.sh && cd -
