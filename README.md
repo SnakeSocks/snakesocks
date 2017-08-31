@@ -44,16 +44,7 @@ sudo make install
 
 - client for windows (mingw)
 
-Building mingw edition from source is **not** recommended. Usually it's necessary to edit CMakeLists_win.txt and rename it to CMakeLists.txt. Then try launching your build:
-
-```sh
-git clone https://github.com/snakesocks/snakesocks.git && cd snakesocks/src/client
-vim CMakeLists_win.txt # Set some env var.
-mv CMakeLists_win.txt CMakeLists.txt
-cmake -G "MSYS Makefiles" -D CMAKE_BUILD_TYPE=Release . && make
-```
-
-Then you'll get skcli.exe.
+Refer to [here](https://github.com/snakesocks/snakesocks-windows) please.
 
 ## Install and use modules
 
