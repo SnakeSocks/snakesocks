@@ -352,9 +352,7 @@ void s5server::dealConnection(fd s5connfd)
     }
     catch (std::exception &e)
     {
-        debug(2) printf("Exception caught from child thread:");
-        debug(2) printf(e.what());
-        debug(2) printf("\n");
+        debug(2) cout << "Exception caught from child thread:" << e.what() << endl;
     }
     debug(1) printf("Socks5: Connection %d closed.\n", s5connfd);
     close(s5connfd);
