@@ -45,7 +45,7 @@ fd tunnel::newConnection() const
     hints.ai_socktype = SOCK_STREAM;
     auto _ = getaddrinfo(serverIp.c_str(), std::to_string(serverPort).c_str(), &hints, &paddr);
     if(_ != 0) sysdie("getaddrinfo failed. Check network connection to %s:%d; returnval=%d, check `man getaddrinfo`'s return value.", serverIp.c_str(), serverPort, _);
-    reinforce_scope_begin(____gd_fc3, [p=paddr](){freeaddrinfo(p);})
+    defer([p=paddr](){freeaddrinfo(p);});
 
     bool success = false;
     for (addrinfo *rp = paddr; rp != NULL; rp = rp->ai_next) {
@@ -63,7 +63,6 @@ fd tunnel::newConnection() const
     }
     if(!success) sysdie("Failed to connect to any of these addr.");
 
-    reinforce_scope_end(____gd_fc3)
     return sockfd;
 }
 #else
@@ -89,7 +88,7 @@ fd tunnel::newConnection() const
         WSACleanup();
         sysdie("getaddrinfo failed. Check network connection to %s:%d; returnval=%d, check `man getaddrinfo`'s return value.", serverIp.c_str(), serverPort, _); 
     }   
-    reinforce_scope_begin(____gd_fc3, [p=paddr](){WSACleanup();freeaddrinfo(p);})
+    defer([p=paddr](){WSACleanup();freeaddrinfo(p);});
 
     bool success = false;
     for (addrinfo *rp = paddr; rp != NULL; rp = rp->ai_next) {
@@ -107,7 +106,6 @@ fd tunnel::newConnection() const
     }   
     if(!success) sysdie("Failed to connect to any of these addr.");
 
-    reinforce_scope_end(____gd_fc3)
     return sockfd;
 }
 #endif
