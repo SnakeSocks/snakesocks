@@ -4,6 +4,7 @@
 ver=$1
 arch=$2
 cd ..
+make clean
 
 rel=release/$ver/$arch
 mkdir -p $rel/mod > /dev/null 2>&1
