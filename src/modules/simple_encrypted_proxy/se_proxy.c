@@ -70,7 +70,6 @@ bool client_deal_auth_reply(connect_info *conn, binary_safe_string server_reply)
     sym_passphrase *ainfo = (sym_passphrase*)conn->additional_info; // cast for better reference
     ainfo->pwlen=tmplen;
     memcpy(&ainfo->str,result+strlen(MAGIC_STR),tmplen);
-    free(server_reply.str);
     return true;
 }
 binary_safe_string client_encode(connect_info *conn, client_query payload)
