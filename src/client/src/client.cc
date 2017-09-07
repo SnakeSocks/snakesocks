@@ -26,7 +26,7 @@ void display_usage()
 {
 #define n "\n"
     printf(
-#ifdef FOR_MINGW_WIN
+#ifdef WIN32
             "SnakeSocks Client 1.2.0 Windows Edition" n n
 #else
             "SnakeSocks Client 1.2.0" n n
@@ -44,10 +44,15 @@ void display_usage()
             "-D <debug level>\tDebug level to set" n
             "-m <path to module>\tModule path" n
             n
+#ifdef WIN32
+            "-c <config file path>\tPath to config file(default: conf\\client.conf)" n
+            "                     \t    Use '-c NULL' to prevent me from looking for client.conf" n
+#else
             "-c <config file path>\tPath to config file(default: /etc/snakesocks/conf/client.conf)" n
             "                     \t    Use '-c NULL' to prevent me from looking for client.conf" n
             "-d\tRun client as daemon" n
             "-l <log file name>\tLog file for daemon mode(default: /var/log/skcli.log)" n
+#endif
             "-h\tShow this message" n n
             "Published on GNU license V2." n
     );
@@ -132,7 +137,11 @@ int ____main(int arglen, char **argv)
     }
     else
     {
+#ifdef WIN32
+        conf.load(confPath == NULL ? "conf\\client.conf" : confPath);
+#else
         conf.load(confPath == NULL ? "/etc/snakesocks/conf/client.conf" : confPath);
+#endif
         if(daemonLogFilePath) conf.daemonLogFile = daemonLogFilePath;
         if(serverAddr) conf.serverIp = serverAddr;
         if(serverPort) conf.serverPort = atol(serverPort);
