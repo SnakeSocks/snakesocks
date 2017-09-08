@@ -58,7 +58,6 @@ bool client_deal_auth_reply(connect_info *conn, binary_safe_string server_reply)
     char* result = malloc(server_reply.length);
     size_t rlen = AESDecrypt(server_reply.str,conn->passphrase.str,result,server_reply.length,conn->passphrase.length,Q_AES_FLAG_FILL);
     if(strncmp(result,MAGIC_STR,strlen(MAGIC_STR))){
-        free(server_reply.str);
         return false;
     }
     // then the magic part is correct.
