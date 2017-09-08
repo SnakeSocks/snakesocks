@@ -96,10 +96,10 @@ func handleClientRequest(client net.Conn) {
 	connectInfo.passphrase = pass
 	if ok := authClient(client, &connectInfo); !ok {
 		DPrintf("Auth false")
-		return
 	}else{
 		DPrintf("Auth true")
+		proxyGo(client, connectInfo)
 	}
-	proxyGo(client, connectInfo)
+	client.Close()
 	return
 }
