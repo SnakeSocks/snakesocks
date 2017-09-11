@@ -265,24 +265,41 @@ client_query s5server::doConnect(fd s5connfd)
 #define max(a, b) ((a)>(b)?(a):(b))
 using unique_cstring_ptr=std::unique_ptr<char, decltype(&std::free)>;
 
+/*
+#include <chrono>
+#include <iomanip>
+void printTime()
+{
+auto now = std::chrono::system_clock::now();
+auto now_c = std::chrono::system_clock::to_time_t(now);
+std::cout << std::put_time(std::localtime(&now_c), "%c") << std::endl;
+}
+*/
+
 void s5server::passPackets(fd s5connfd, client_query dnsPackToQuery)
 {
     SnakeConnection nextHop(ssserver);
 
-    // First data pack (DNS)
+    // Send first data pack (DNS)
     binary_safe_string firstPack = ssserver.mod.encode(_binary_safe_string{false, 0, nullptr}, nextHop.GetConnInfo(), dnsPackToQuery);
     unique_cstring_ptr firstPackStr(firstPack.str, &std::free);
     auto lengthBackup = firstPack.length;
     firstPack.length = htonl(firstPack.length);
     debug(3) std::cout << "First data pack to send: len=" << lengthBackup << std::endl;
-    nextHop.sendn(&firstPack.length, sizeof(firstPack.length));
-    nextHop.sendn(firstPackStr.get(), lengthBackup);
+    nextHop.strict_sendn(&firstPack.length, sizeof(firstPack.length));
+    nextHop.strict_sendn(firstPackStr.get(), lengthBackup);
 
+    // Get DNS responce.
     binary_safe_string firstReturnPack;
-    nextHop.recvn(&firstReturnPack.length, sizeof(firstReturnPack.length));
+    nextHop.strict_recvn(&firstReturnPack.length, sizeof(firstReturnPack.length));
     firstReturnPack.length = ntohl(firstReturnPack.length);
+    if(firstReturnPack.length == 0xff7f0000) //Unknown error.
+    {
+        std::printf("Conn%d:Fatal error prevented. Unknown packet 0xff7f0000 appeared after we solved this bug. Please report!!!\n", s5connfd);
+        abort();
+    }
     firstReturnPack.str = (char *) malloc(firstReturnPack.length);
-    nextHop.recvn(firstReturnPack.str, firstReturnPack.length);
+    nextHop.strict_recvn(firstReturnPack.str, firstReturnPack.length);
     client_query realTemplate = ssserver.mod.decode(firstReturnPack, nextHop.GetConnInfo());
 
     // First data pack done.
@@ -312,8 +329,8 @@ void s5server::passPackets(fd s5connfd, client_query dnsPackToQuery)
             encodedDat.length = htonl(encodedDat.length);
             debug(3) std::cout << "Data pack to send: len=" << lengthBackup << std::endl;
             debug(4) std::cout << NetLib::printData(encodedDatStr.get(), lengthBackup) << std::endl;
-            nextHop.sendn(&encodedDat.length, sizeof(encodedDat.length));
-            nextHop.sendn(encodedDatStr.get(), lengthBackup);
+            nextHop.strict_sendn(&encodedDat.length, sizeof(encodedDat.length));
+            nextHop.strict_sendn(encodedDatStr.get(), lengthBackup);
         }
         if (FD_ISSET(nextHop.GetConnFd(), &rset))
         {
@@ -327,9 +344,9 @@ void s5server::passPackets(fd s5connfd, client_query dnsPackToQuery)
             debug(3) std::cout << "Data pack recv:len=" << binLen << std::endl;
             debug(4) std::cout << NetLib::printData(bridgeBuffer, binLen) << std::endl;
             auto decodedDat = ssserver.mod.decode(binary_safe_string{false, binLen, (char *) bridgeBuffer}, nextHop.GetConnInfo()).payload;
-            auto ret = sockIO::sendn(s5connfd, decodedDat.str, decodedDat.length, MSG_NOSIGNAL);
-            free(decodedDat.str);
-            if (ret == -1) sysdie("write failed");
+            defer([&](){free(decodedDat.str);});
+            if(sockIO::sendn(s5connfd, decodedDat.str, decodedDat.length, MSG_NOSIGNAL) == -1)
+                sysdie("write failed");
         }
     }
     _close_conn:;

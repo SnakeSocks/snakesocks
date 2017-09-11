@@ -199,15 +199,17 @@ namespace rlib {
                 currvptr = (char *)vptr + current / 2;
             }
         }
-        static void recvn_ex(int fd, void *vptr, size_t n, int flags) //with exception, never return error.
+        static ssize_t recvn_ex(int fd, void *vptr, size_t n, int flags) //with exception, never return error.
         {
             auto ret = recvn(fd, vptr, n, flags);
             if(ret == -1) throw std::runtime_error("recvn failed.");
+            return ret;
         }
-        static void sendn_ex(int fd, const void *vptr, size_t n, int flags)
+        static ssize_t sendn_ex(int fd, const void *vptr, size_t n, int flags)
         {
             auto ret = sendn(fd, vptr, n, flags);
             if(ret == -1) throw std::runtime_error("sendn failed.");
+            return ret;
         }
         static ssize_t recvall_ex(int fd, void **pvptr, size_t initSize, int flags) //never return -1
         {
