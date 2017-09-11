@@ -60,6 +60,7 @@ func getAddress(client net.Conn, connectInfo C.connect_info) (net.Conn, error) {
 	queryFrom.payload.length = 0
 	dataFrom := C.call_server_encode(&connectInfo, queryFrom)
 	defer C.free(unsafe.Pointer(dataFrom.str))
+	DPrintf("Response to DNS Query: length %v",dataFrom.length)
 	ok = writeBinarySafeString(client, dataFrom)
 	if !ok {
 		return nil, errors.New("get address error!")
