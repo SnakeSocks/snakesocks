@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.5)
 project(SnakeSocksCli)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -24,7 +24,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(CLIENT_SRC src/client.cc src/socks5.cc src/tunnel.cc src/module.cc src/lib/NetLib.cc)
 add_executable(skcli ${CLIENT_SRC})
 target_link_libraries(skcli Threads::Threads)
-target_link_libraries(skcli boost_system)
+target_link_libraries(skcli Boost::system)
 target_link_libraries(skcli dl)
 
 #if(FOR_M32)
