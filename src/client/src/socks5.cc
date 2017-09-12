@@ -244,26 +244,20 @@ client_query s5server::doConnect(fd s5connfd)
     char CMD, ATYP;
     client_query remoteInfo;
     std::tie(CMD, ATYP, remoteInfo) = unpackConnectionPacket(buf);
+    rlib::scope_guard remoteInfoGuarder = [&](){free(remoteInfo.payload.str);};
     if (CMD != 01)
-    {
-        free(remoteInfo.payload.str);
         die("Request can not be processed.(CMD=%d)", (int) CMD);
-    }
 
     //Make success reply.
     buf[1] = 0;
     auto pkgLen = addrlen + 6;
-    if (fdIO::writen(s5connfd, buf, pkgLen) == -1)
-    {
-        free(remoteInfo.payload.str);
-        sysdie("write failed.");
-    }
+    fdIO::writen_ex(s5connfd, buf, pkgLen);
 
+    remoteInfoGuarder.dismiss();
     return remoteInfo;
 }
 
 #define max(a, b) ((a)>(b)?(a):(b))
-using unique_cstring_ptr=std::unique_ptr<char, decltype(&std::free)>;
 
 /*
 #include <chrono>
@@ -281,13 +275,13 @@ void s5server::passPackets(fd s5connfd, client_query dnsPackToQuery)
     SnakeConnection nextHop(ssserver);
 
     // Send first data pack (DNS)
-    binary_safe_string firstPack = ssserver.mod.encode(_binary_safe_string{false, 0, nullptr}, nextHop.GetConnInfo(), dnsPackToQuery);
-    unique_cstring_ptr firstPackStr(firstPack.str, &std::free);
+    binary_safe_string firstPack = ssserver.mod.encode(binary_safe_string{false, 0, nullptr}, nextHop.GetConnInfo(), dnsPackToQuery);
+    defer([&](){std::free(firstPack.str);});
     auto lengthBackup = firstPack.length;
     firstPack.length = htonl(firstPack.length);
     debug(3) std::cout << "First data pack to send: len=" << lengthBackup << std::endl;
     nextHop.strict_sendn(&firstPack.length, sizeof(firstPack.length));
-    nextHop.strict_sendn(firstPackStr.get(), lengthBackup);
+    nextHop.strict_sendn(firstPack.str, lengthBackup);
 
     // Get DNS responce.
     binary_safe_string firstReturnPack;
@@ -324,13 +318,13 @@ void s5server::passPackets(fd s5connfd, client_query dnsPackToQuery)
             else if(ret < 0)
                 sysdie("read failed");
             auto encodedDat = ssserver.mod.encode(binary_safe_string{false, static_cast<uint32_t>(ret), (char *) bridgeBuffer}, nextHop.GetConnInfo(), realTemplate);
-            unique_cstring_ptr encodedDatStr(encodedDat.str, &std::free);
+            defer([&](){std::free(encodedDat.str);});
             auto lengthBackup = encodedDat.length;
             encodedDat.length = htonl(encodedDat.length);
             debug(3) std::cout << "Data pack to send: len=" << lengthBackup << std::endl;
-            debug(4) std::cout << NetLib::printData(encodedDatStr.get(), lengthBackup) << std::endl;
+            debug(4) std::cout << NetLib::printData(encodedDat.str, lengthBackup) << std::endl;
             nextHop.strict_sendn(&encodedDat.length, sizeof(encodedDat.length));
-            nextHop.strict_sendn(encodedDatStr.get(), lengthBackup);
+            nextHop.strict_sendn(encodedDat.str, lengthBackup);
         }
         if (FD_ISSET(nextHop.GetConnFd(), &rset))
         {

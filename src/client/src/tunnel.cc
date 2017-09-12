@@ -3,9 +3,7 @@
 #include "sio.hpp"
 #include "scope_guard.hpp"
 #include "NetLib.hpp"
-#include <memory>
 
-using unique_cstring_ptr=std::unique_ptr<char, decltype(&std::free)>;
 using namespace rlib;
 
 void tunnel::initCString()
@@ -114,20 +112,21 @@ bool tunnel::doAuth(connect_info *conn) const
 {
     fd connfd = conn->connect_fd;
     binary_safe_string authdat = mod.makeAuthQuery(conn);
-    unique_cstring_ptr authdatStr(authdat.str, &std::free);
+    defer([&](){std::free(authdat.str);});
     auto lengthBackup = authdat.length;
     authdat.length = htonl(authdat.length);
     debug(3) printf("Authdat: length=%u\n", lengthBackup);
     if(-1 == fdIO::writen(connfd, &authdat.length, sizeof(authdat.length))) sysdie("Write failed.");
-    if(-1 == fdIO::writen(connfd, authdatStr.get(), lengthBackup)) sysdie("Write failed.");
+    if(-1 == fdIO::writen(connfd, authdat.str, lengthBackup)) sysdie("Write failed.");
 
     uint32_t replyLen;
     if(fdIO::readn(connfd, &replyLen, 4) == -1) sysdie("readn failed.");
     replyLen = ntohl(replyLen);
 
     if(replyLen > 1024 * 1024 * 1024) sysdie("Fatal: memory out of range. ");
-    unique_cstring_ptr rbuf((char *)malloc(replyLen), &std::free);
-    if(-1 == fdIO::readn(connfd, rbuf.get(), replyLen)) sysdie("read failed.");
+    char *rbuf = (char *)malloc(replyLen);
+    defer([&](){std::free(rbuf);});
+    if(-1 == fdIO::readn(connfd, rbuf, replyLen)) sysdie("read failed.");
 
-    return mod.onAuthReply(rbuf.get(), replyLen, conn);
+    return mod.onAuthReply(rbuf, replyLen, conn);
 }

@@ -47,8 +47,15 @@ namespace rlib {
     };
 }
 
+// This is some crazy magic that helps produce __BASE__247
+// Vanilla interpolation of __BASE__##__LINE__ would produce __BASE____LINE__
+// I still can't figure out why it works, but it has to do with macro resolution ordering
+#define PP_CAT(a, b) PP_CAT_I(a, b)
+#define PP_CAT_I(a, b) PP_CAT_II(~, a ## b)
+#define PP_CAT_II(p, res) res
+#define UNIQUE_NAME(base) PP_CAT(base, __COUNTER__)
 #ifndef defer
-#define defer(callable) ::rlib::scope_guard _guarder_id_##__COUNTER__(callable)
+#define defer(callable) ::rlib::scope_guard UNIQUE_NAME(_guarder_id_) (callable)
 #endif
 
 #define reinforce_scope_begin(guarderName, callable) scope_guard guarderName = callable; try{
