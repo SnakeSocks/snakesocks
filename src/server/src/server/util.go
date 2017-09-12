@@ -34,6 +34,7 @@ import (
 	"net"
 	"os"
 	"io"
+	"unsafe"
 )
 
 var Debug int
@@ -134,7 +135,7 @@ func readBinarySafeString(conn net.Conn, data *C.binary_safe_string) bool {
 func writeBinarySafeString(conn net.Conn, data C.binary_safe_string) bool {
 	dataB := make([]byte, 4)
 	binary.BigEndian.PutUint32(dataB, uint32(data.length))
-	dataB = append(dataB, []byte(C.GoStringN(data.str, C.int(data.length)))...)
+	dataB = append(dataB, []byte(C.GoBytes(unsafe.Pointer(data.str), C.int(data.length)))...)
 	_, err := conn.Write(dataB[:])
 	DPrintf("Write binary safe string size %v:%v", uint32(data.length), dataB)
 	if err != nil {
