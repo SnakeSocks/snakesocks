@@ -57,12 +57,16 @@ import (
 	"net"
 	"strconv"
 	"unsafe"
+	//"log"
+	//_ "net/http/pprof"
+	//"net/http"
 )
 
-var cnt int
 func StartServer() {
 	err := initConfig()
-	cnt = 0
+	//go func() {
+	//	log.Println(http.ListenAndServe("localhost:6060", nil))
+	//}()
 	if err != nil {
 		PPrintf(err)
 	}
@@ -74,8 +78,6 @@ func StartServer() {
 
 	for {
 		client, err := l.Accept()
-		cnt++
-		DPrintf("---Client open files:%v---",cnt)
 		if err != nil {
 			EPrintf("Err: %v",err)
 		}
@@ -90,6 +92,7 @@ func handleClientRequest(client net.Conn) {
 	}
 	DPrintf("Client with address(%v) connected to server", client.RemoteAddr())
 	DPrintf("Start to auth the client")
+	defer client.Close()
 	var connectInfo C.connect_info
 	var pass C.binary_safe_string
 	pass.null_terminated = false
@@ -103,8 +106,5 @@ func handleClientRequest(client net.Conn) {
 		DPrintf("Auth true")
 		proxyGo(client, connectInfo)
 	}
-	client.Close()
-	cnt--
-	DPrintf("---Client open files: %v---",cnt)
 	return
 }

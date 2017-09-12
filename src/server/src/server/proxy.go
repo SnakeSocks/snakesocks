@@ -29,6 +29,9 @@ func proxyGo(client net.Conn, connectInfo C.connect_info) {
 	go write(client, connectInfo, dstConn, chanProxyEnd)
 	sig := <- chanProxyEnd
 	if sig {
+		dstConn.Close()
+		_ = <-chanProxyEnd
+		close(chanProxyEnd)
 		C.call_server_connection_close(&connectInfo)
 		return
 	}
@@ -70,13 +73,7 @@ func getAddress(client net.Conn, connectInfo C.connect_info) (net.Conn, error) {
 
 func read(cliConn net.Conn, connectInfo C.connect_info, dstConn net.Conn, c chan bool) {
 	for {
-		select{
-		case <-c:
-			return
-		default:
-		}
 		if !readEach(cliConn, connectInfo, dstConn) {
-			c<-true
 			c<-true
 			return
 		}
@@ -105,13 +102,7 @@ func readEach(cliConn net.Conn, connectInfo C.connect_info, dstConn net.Conn) bo
 
 func write(cliConn net.Conn, connectInfo C.connect_info, dstConn net.Conn, c chan bool) {
 	for {
-		select {
-		case <-c:
-			return
-		default:
-		}
 		if !writeEach(cliConn, connectInfo, dstConn) {
-			c<-true
 			c<-true
 			return
 		}
@@ -125,7 +116,7 @@ func writeEach(cliConn net.Conn, connectInfo C.connect_info, dstConn net.Conn) b
 	lens, err := dstConn.Read(load)
 	if err != nil {
 		if err != io.EOF {
-			EPrintf("%v", err)
+			DPrintf("Err: %v", err)
 		}
 		return false
 	}
