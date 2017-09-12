@@ -324,15 +324,17 @@ namespace rlib {
                 currvptr = (char *)vptr + current / 2;
             }
         }
-        static void recvn_ex(SOCKET fd, char *vptr, size_t n, int flags) //with exception, never return error.
+        static ssize_t recvn_ex(SOCKET fd, char *vptr, size_t n, int flags) //with exception, never return error.
         {
             auto ret = recvn(fd, vptr, n, flags);
             if(ret == -1) throw std::runtime_error("recvn failed.");
+			return ret;
         }
-        static void sendn_ex(SOCKET fd, const char *vptr, size_t n, int flags)
+        static ssize_t sendn_ex(SOCKET fd, const char *vptr, size_t n, int flags)
         {
             auto ret = sendn(fd, vptr, n, flags);
             if(ret == -1) throw std::runtime_error("recvn failed.");
+						return ret;
         }
         static ssize_t recvall_ex(SOCKET fd, void **pvptr, size_t initSize, int flags) //never return -1
         {
@@ -357,11 +359,11 @@ namespace rlib {
         {
             return sockIO::recvall(fd, pvptr, initSize, 0);
         }
-        static void readn_ex(SOCKET fd, void *vptr, size_t n) //with exception, never return error.
+        static ssize_t readn_ex(SOCKET fd, void *vptr, size_t n) //with exception, never return error.
         {
             return sockIO::recvn_ex(fd, (char *)vptr, n, 0);
         }
-        static void writen_ex(SOCKET fd, const void *vptr, size_t n)
+        static ssize_t writen_ex(SOCKET fd, const void *vptr, size_t n)
         {
             return sockIO::sendn_ex(fd, (const char *)vptr, n, 0);
         }

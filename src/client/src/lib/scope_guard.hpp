@@ -53,9 +53,9 @@ namespace rlib {
 #define PP_CAT(a, b) PP_CAT_I(a, b)
 #define PP_CAT_I(a, b) PP_CAT_II(~, a ## b)
 #define PP_CAT_II(p, res) res
-#define UNIQUE_NAME(base) PP_CAT(base, __COUNTER__)
+#define RLIB_UNIQUE_NAME(base) PP_CAT(base, __COUNTER__)
 #ifndef defer
-#define defer(callable) ::rlib::scope_guard UNIQUE_NAME(_guarder_id_) (callable)
+#define defer(callable) ::rlib::scope_guard RLIB_UNIQUE_NAME(_guarder_id_) (callable)
 #endif
 
 #define reinforce_scope_begin(guarderName, callable) scope_guard guarderName = callable; try{
