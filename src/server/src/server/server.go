@@ -59,8 +59,10 @@ import (
 	"unsafe"
 )
 
+var cnt int
 func StartServer() {
 	err := initConfig()
+	cnt = 0
 	if err != nil {
 		PPrintf(err)
 	}
@@ -72,6 +74,8 @@ func StartServer() {
 
 	for {
 		client, err := l.Accept()
+		cnt++
+		DPrintf("---Client open files:%v---",cnt)
 		if err != nil {
 			EPrintf("Err: %v",err)
 		}
@@ -85,7 +89,6 @@ func handleClientRequest(client net.Conn) {
 		return
 	}
 	DPrintf("Client with address(%v) connected to server", client.RemoteAddr())
-	defer client.Close()
 	DPrintf("Start to auth the client")
 	var connectInfo C.connect_info
 	var pass C.binary_safe_string
@@ -101,5 +104,7 @@ func handleClientRequest(client net.Conn) {
 		proxyGo(client, connectInfo)
 	}
 	client.Close()
+	cnt--
+	DPrintf("---Client open files: %v---",cnt)
 	return
 }

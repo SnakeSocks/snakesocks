@@ -15,7 +15,6 @@ import (
 	"net"
 	"strconv"
 	"unsafe"
-	"sync"
 	"io"
 )
 
@@ -25,13 +24,14 @@ func proxyGo(client net.Conn, connectInfo C.connect_info) {
 		EPrintf("%v", err)
 		return
 	}
-	var s sync.WaitGroup
-	s.Add(2)
-	go read(client, connectInfo, dstConn, s)
-	go write(client, connectInfo, dstConn, s)
-	s.Wait()
-	C.call_server_connection_close(&connectInfo)
-	return
+	chanProxyEnd := make(chan bool)
+	go read(client, connectInfo, dstConn, chanProxyEnd)
+	go write(client, connectInfo, dstConn, chanProxyEnd)
+	sig := <- chanProxyEnd
+	if sig {
+		C.call_server_connection_close(&connectInfo)
+		return
+	}
 }
 
 func getAddress(client net.Conn, connectInfo C.connect_info) (net.Conn, error) {
@@ -68,10 +68,16 @@ func getAddress(client net.Conn, connectInfo C.connect_info) (net.Conn, error) {
 	return dstConn, nil
 }
 
-func read(cliConn net.Conn, connectInfo C.connect_info, dstConn net.Conn, s sync.WaitGroup) {
+func read(cliConn net.Conn, connectInfo C.connect_info, dstConn net.Conn, c chan bool) {
 	for {
+		select{
+		case <-c:
+			return
+		default:
+		}
 		if !readEach(cliConn, connectInfo, dstConn) {
-			s.Done()
+			c<-true
+			c<-true
 			return
 		}
 	}
@@ -97,10 +103,16 @@ func readEach(cliConn net.Conn, connectInfo C.connect_info, dstConn net.Conn) bo
 	return true
 }
 
-func write(cliConn net.Conn, connectInfo C.connect_info, dstConn net.Conn, s sync.WaitGroup) {
+func write(cliConn net.Conn, connectInfo C.connect_info, dstConn net.Conn, c chan bool) {
 	for {
+		select {
+		case <-c:
+			return
+		default:
+		}
 		if !writeEach(cliConn, connectInfo, dstConn) {
-			s.Done()
+			c<-true
+			c<-true
 			return
 		}
 	}
