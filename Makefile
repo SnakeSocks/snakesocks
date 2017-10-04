@@ -11,12 +11,16 @@ server:
 client:
 	cd src/client && cmake . -DCMAKE_BUILD_TYPE=Release && $(MAKE) && cd -
 
+default_modules:
+	cd src/modules && make simple_proxy && make se_proxy && cd -
+
 init_dir:
 	mkdir -p $(prefix)/modules; mkdir -p $(prefix)/conf; mkdir -p $$pkgdir/usr/bin
 
 install: init_dir
 	[ -f src/client/skcli ] && $(inst_cli)
 	[ -f src/server/sksrv ] && $(inst_srv)
+	cp src/modules/*.so $(prefix)/modules/
 
 define inst_srv =
 	cp src/server/sksrv $(prefix)/sksrv ;\
@@ -40,3 +44,4 @@ uninstall:
 clean:
 	cd src/server && $(MAKE) clean && cd -
 	cd src/client && ./cmake_clean.sh && cd -
+	cd src/modules && make clean && cd -

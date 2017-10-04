@@ -27,13 +27,13 @@ include config.mk
 main : $(YOUR_MODULE)
 	$(TERM_ECHO)$(ECHO_PROG) "     --   destination main built."
 
-my_module : simple_proxy.o
-	$(TERM_ECHO)$(ECHO_PROG) "     LD   my_module.so"
-	$(TERM_ECHO)$(CC) $(DLLFLAGS) -o my_module.so simple_proxy.o
+simple_proxy : simple_proxy.o
+	$(TERM_ECHO)$(ECHO_PROG) "     LD   simple_unsafe_encrypt.so"
+	$(TERM_ECHO)$(CC) $(DLLFLAGS) -o simple_unsafe_encrypt.so simple_proxy.o
 
 se_proxy : se_proxy.o aes.o kokke_aes.o
-	$(TERM_ECHO)$(ECHO_PROG) "     LD   se_proxy.so"
-	$(TERM_ECHO)$(CC) $(DLLFLAGS) -o se_proxy.so se_proxy.o kokke_aes.o aes.o
+	$(TERM_ECHO)$(ECHO_PROG) "     LD   simple_aes.so"
+	$(TERM_ECHO)$(CC) $(DLLFLAGS) -o simple_aes.so se_proxy.o kokke_aes.o aes.o
 
 simple_proxy.o : simple_proxy/simple_proxy.c
 	$(TERM_ECHO)$(ECHO_PROG) "     CC   simple_proxy.o"
@@ -66,7 +66,7 @@ fmt.o : module_util/utils.h module_util/fmt.c
 	$(TERM_ECHO)$(CC) -c $(CFLAGS) -o fmt.o module_util/fmt.c
 
 ### testers:
-### use this to test your module using the test program we provided.
+### use this to test your module with the test program we provided.
 ### notice this test can only thest the correctiveness of your module.
 ### things about memory management -- you must take care yourself.
 ### read our simple_proxy module for example on the agreement that
@@ -75,7 +75,7 @@ fmt.o : module_util/utils.h module_util/fmt.c
 test: $(YOUR_MODULE_TEST)
 	$(TERM_ECHO)$(ECHO_PROG) "     --   destination test built."
 
-my_module_test : simple_proxy.o test.o
+simple_proxy_test : simple_proxy.o test.o
 	$(TERM_ECHO)$(ECHO_PROG) "     LD   test"
 	$(TERM_ECHO)$(CC) -o test test.o simple_proxy.o
 
