@@ -1,4 +1,6 @@
-prefix=/etc/snakesocks
+nofakeroot_prefix=/etc/snakesocks
+prefix=$$pkgdir$(nofakeroot_prefix)
+
 
 def:
 	echo 'Usage: "make server" or "make client"' && exit 1
@@ -10,7 +12,7 @@ client:
 	cd src/client && cmake . -DCMAKE_BUILD_TYPE=Release && $(MAKE) && cd -
 
 init_dir:
-	mkdir -p $(prefix)/modules; mkdir -p $(prefix)/conf
+	mkdir -p $(prefix)/modules; mkdir -p $(prefix)/conf; mkdir -p $$pkgdir/usr/bin
 
 install: init_dir
 	[ -f src/client/skcli ] && $(inst_cli)
@@ -21,7 +23,7 @@ define inst_srv =
 	CONF_NAME='server.conf' ;\
 	[ -f $(prefix)/conf/server.conf ] && CONF_NAME="$$CONF_NAME"'.new' ;\
 	cp src/server/example.conf $(prefix)/conf/$$CONF_NAME ;\
-	[ -L /usr/bin/sksrv ] || ln -s $(prefix)/sksrv /usr/bin/sksrv
+	[ -L $$pkgdir/usr/bin/sksrv ] || ln -s $(nofakeroot_prefix)/sksrv $$pkgdir/usr/bin/sksrv
 endef
 
 define inst_cli =
@@ -29,7 +31,7 @@ define inst_cli =
 	CONF_NAME='client.conf' ;\
 	[ -f $(prefix)/conf/client.conf ] && CONF_NAME="$$CONF_NAME"'.new' ;\
 	cp src/client/example.conf $(prefix)/conf/$$CONF_NAME ;\
-	[ -L /usr/bin/skcli ] || ln -s $(prefix)/skcli /usr/bin/skcli
+	[ -L $$pkgdir/usr/bin/skcli ] || ln -s $(nofakeroot_prefix)/skcli $$pkgdir/usr/bin/skcli
 endef
 
 uninstall:

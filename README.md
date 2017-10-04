@@ -61,3 +61,8 @@ Refer to [here](https://github.com/snakesocks/snakesocks-windows) please.
 SnakeSocks has its configuration files in `/etc/snakesocks/conf`. Just edit `client.conf` or `server.conf` to fit your demand.
 
 The client and the server should use the same module, unless you're really clear about what you're doing.
+
+## Optimize
+
+Usually, tcpbbr or kcptun is useful to improve connection stability.
+
