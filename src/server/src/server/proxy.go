@@ -12,10 +12,10 @@ import "C"
 import (
 	"encoding/binary"
 	"errors"
+	"io"
 	"net"
 	"strconv"
 	"unsafe"
-	"io"
 )
 
 func proxyGo(client net.Conn, connectInfo C.connect_info) {
@@ -27,7 +27,7 @@ func proxyGo(client net.Conn, connectInfo C.connect_info) {
 	chanProxyEnd := make(chan bool)
 	go read(client, connectInfo, dstConn, chanProxyEnd)
 	go write(client, connectInfo, dstConn, chanProxyEnd)
-	sig := <- chanProxyEnd
+	sig := <-chanProxyEnd
 	if sig {
 		dstConn.Close()
 		_ = <-chanProxyEnd
@@ -63,7 +63,7 @@ func getAddress(client net.Conn, connectInfo C.connect_info) (net.Conn, error) {
 	queryFrom.payload.length = 0
 	dataFrom := C.call_server_encode(&connectInfo, queryFrom)
 	defer C.free(unsafe.Pointer(dataFrom.str))
-	DPrintf("Response to DNS Query: length %v",dataFrom.length)
+	DPrintf("Response to DNS Query: length %v", dataFrom.length)
 	ok = writeBinarySafeString(client, dataFrom)
 	if !ok {
 		return nil, errors.New("get address error!")
@@ -74,7 +74,7 @@ func getAddress(client net.Conn, connectInfo C.connect_info) (net.Conn, error) {
 func read(cliConn net.Conn, connectInfo C.connect_info, dstConn net.Conn, c chan bool) {
 	for {
 		if !readEach(cliConn, connectInfo, dstConn) {
-			c<-true
+			c <- true
 			return
 		}
 	}
@@ -103,7 +103,7 @@ func readEach(cliConn net.Conn, connectInfo C.connect_info, dstConn net.Conn) bo
 func write(cliConn net.Conn, connectInfo C.connect_info, dstConn net.Conn, c chan bool) {
 	for {
 		if !writeEach(cliConn, connectInfo, dstConn) {
-			c<-true
+			c <- true
 			return
 		}
 	}

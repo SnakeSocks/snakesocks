@@ -79,7 +79,7 @@ func StartServer() {
 	for {
 		client, err := l.Accept()
 		if err != nil {
-			EPrintf("Err: %v",err)
+			EPrintf("Err: %v", err)
 		}
 		go handleClientRequest(client)
 	}
@@ -102,7 +102,7 @@ func handleClientRequest(client net.Conn) {
 	connectInfo.passphrase = pass
 	if ok := authClient(client, &connectInfo); !ok {
 		DPrintf("Auth false")
-	}else{
+	} else {
 		DPrintf("Auth true")
 		proxyGo(client, connectInfo)
 	}
