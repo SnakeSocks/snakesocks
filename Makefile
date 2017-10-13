@@ -18,25 +18,9 @@ init_dir:
 	mkdir -p $(prefix)/modules; mkdir -p $(prefix)/conf; mkdir -p $$pkgdir/usr/bin
 
 install: init_dir
-	[ -f src/client/skcli ] && $(inst_cli)
-	[ -f src/server/sksrv ] && $(inst_srv)
-	cp src/modules/*.so $(prefix)/modules/ > /dev/null 2>&1 || echo '' # Urgent temporary fix.
-
-define inst_srv =
-	cp src/server/sksrv $(prefix)/sksrv ;\
-	CONF_NAME='server.conf' ;\
-	[ -f $(prefix)/conf/server.conf ] && CONF_NAME="$$CONF_NAME"'.new' ;\
-	cp src/server/example.conf $(prefix)/conf/$$CONF_NAME ;\
-	[ -L $$pkgdir/usr/bin/sksrv ] || ln -s $(nofakeroot_prefix)/sksrv $$pkgdir/usr/bin/sksrv
-endef
-
-define inst_cli =
-	cp src/client/skcli $(prefix)/skcli ;\
-	CONF_NAME='client.conf' ;\
-	[ -f $(prefix)/conf/client.conf ] && CONF_NAME="$$CONF_NAME"'.new' ;\
-	cp src/client/example.conf $(prefix)/conf/$$CONF_NAME ;\
-	[ -L $$pkgdir/usr/bin/skcli ] || ln -s $(nofakeroot_prefix)/skcli $$pkgdir/usr/bin/skcli
-endef
+	[ -f src/server/sksrv ] && cp src/server/sksrv $(prefix)/sksrv && CONF_NAME='server.conf' && [ -f $(prefix)/conf/server.conf ] && CONF_NAME="$$CONF_NAME"'.new' || echo -n '' && [ -f src/server/sksrv ] && cp src/server/example.conf $(prefix)/conf/$$CONF_NAME && $$([ -L $$pkgdir/usr/bin/sksrv ] || ln -s $(nofakeroot_prefix)/sksrv $$pkgdir/usr/bin/sksrv) || echo -n ''
+	[ -f src/client/skcli ] && cp src/client/skcli $(prefix)/skcli && CONF_NAME='client.conf' && [ -f $(prefix)/conf/client.conf ] && CONF_NAME="$$CONF_NAME"'.new' || echo -n '' && [ -f src/client/skcli ] && cp src/client/example.conf $(prefix)/conf/$$CONF_NAME && $$([ -L $$pkgdir/usr/bin/skcli ] || ln -s $(nofakeroot_prefix)/skcli $$pkgdir/usr/bin/skcli) || echo -n ''
+	cp src/modules/*.so $(prefix)/modules/ > /dev/null 2>&1 || echo -n '' # Urgent temporary fix.
 
 uninstall:
 	rm -rf /etc/snakesocks /usr/bin/skcli /usr/bin/sksrv

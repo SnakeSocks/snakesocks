@@ -12,6 +12,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
+# MacOS has no MSG_NOSIGNAL define? I'm not sure if this will lead to EPIPE.
+if(APPLE)
+    add_definitions(-DMSG_NOSIGNAL=0)
+endif()
+
 include_directories(./src)
 include_directories(./src/lib)
 
