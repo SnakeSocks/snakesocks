@@ -20,7 +20,7 @@ init_dir:
 install: init_dir
 	[ -f src/client/skcli ] && $(inst_cli)
 	[ -f src/server/sksrv ] && $(inst_srv)
-	cp src/modules/*.so $(prefix)/modules/
+	cp src/modules/*.so $(prefix)/modules/ > /dev/null 2>&1 || echo '' # Urgent temporary fix.
 
 define inst_srv =
 	cp src/server/sksrv $(prefix)/sksrv ;\
