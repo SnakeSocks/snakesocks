@@ -1,6 +1,6 @@
 language: cpp
 before_script: ls /usr/include/boost
-script: make client && make server ###fuck silly travis### && sudo make install
+script: make client && make server && sudo make install
 
 matrix:
   include:
