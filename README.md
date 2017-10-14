@@ -31,6 +31,7 @@ git clone https://github.com/snakesocks/snakesocks.git
 cd snakesocks
 make client
 sudo make install
+skcli -h
 ```
 
 - server
@@ -40,6 +41,7 @@ git clone https://github.com/snakesocks/snakesocks.git
 cd snakesocks
 make server
 sudo make install
+sksrv -h
 ```
 
 - client for windows (mingw)
