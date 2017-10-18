@@ -28,20 +28,20 @@ main : $(YOUR_MODULE)
 	$(TERM_ECHO)$(ECHO_PROG) "     --   destination main built."
 
 simple_proxy : simple_proxy.o
-	$(TERM_ECHO)$(ECHO_PROG) "     LD   simple_unsafe_encrypt.so"
-	$(TERM_ECHO)$(CC) $(DLLFLAGS) -o simple_unsafe_encrypt.so simple_proxy.o
+	$(TERM_ECHO)$(ECHO_PROG) "     LD   simple_proxy.so"
+	$(TERM_ECHO)$(CC) $(DLLFLAGS) -o simple_proxy.so simple_proxy.o
 
 se_proxy : se_proxy.o aes.o kokke_aes.o
-	$(TERM_ECHO)$(ECHO_PROG) "     LD   simple_aes.so"
-	$(TERM_ECHO)$(CC) $(DLLFLAGS) -o simple_aes.so se_proxy.o kokke_aes.o aes.o
+	$(TERM_ECHO)$(ECHO_PROG) "     LD   se_proxy.so"
+	$(TERM_ECHO)$(CC) $(DLLFLAGS) -o se_proxy.so se_proxy.o kokke_aes.o aes.o
 
 simple_proxy.o : simple_proxy/simple_proxy.c
 	$(TERM_ECHO)$(ECHO_PROG) "     CC   simple_proxy.o"
 	$(TERM_ECHO)$(CC) -c $(CFLAGS) -o simple_proxy.o simple_proxy/simple_proxy.c
 
-se_proxy.o : simple_encrypted_proxy/se_proxy.c
+se_proxy.o : se_proxy/se_proxy.c
 	$(TERM_ECHO)$(ECHO_PROG) "     CC   se_proxy.o"
-	$(TERM_ECHO)$(CC) -c $(CFLAGS) -o se_proxy.o simple_encrypted_proxy/se_proxy.c
+	$(TERM_ECHO)$(CC) -c $(CFLAGS) -o se_proxy.o se_proxy/se_proxy.c
 
 ### optional dependencies
 ### these are built-in useful tools we provided for you.

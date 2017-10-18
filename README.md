@@ -50,13 +50,38 @@ Refer to [here](https://github.com/snakesocks/snakesocks-windows) please.
 
 ## Install and use modules
 
-[TODO]
+1. copy the .so module file to `/etc/snakesocks/modules/` or wherever you like.
+2. change the corresponding configuration to the path of the .so file.
+3. make sure the server and the client use the same module.
 
 ## Build your module from source
 
-[TODO]
+```shell
+cd src/modules
+make <module_name>
+# and the corresponding .so file will be generated.
+# omit <module_name> will build the default destination.
+```
 
 ## Write your own module
+
+### Develop
+
+1. Read `stdafx.h` `conn.h` `bss.h` `client_query.h` for specifications of module APIs.
+2. Read `simple_proxy` and `se_proxy` implementation for examples of module implementation.
+3. Write your own module.
+
+### Test
+
+```shell
+# first,modify Makefile to add your module builds
+# follow examples of se_proxy and simple_proxy
+# then, modify config.mk to set your default build destination.
+# then run
+make test
+./test
+# to run the test program we provided to test the module you write
+```
 
 ## Configuration
 
