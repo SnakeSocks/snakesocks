@@ -3,7 +3,7 @@ prefix=$$pkgdir$(nofakeroot_prefix)
 
 
 def:
-	echo 'Usage: "make server" or "make client"' && exit 1
+	echo 'Usage: "make server" or "make client" or "make default_modules"' && exit 1
 
 server:
 	cd src/server && $(MAKE) skserver && cd -

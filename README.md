@@ -30,6 +30,7 @@ Client for windows will be released together with snakesocks-windows-gui, at [he
 git clone https://github.com/snakesocks/snakesocks.git
 cd snakesocks
 make client
+make default_modules
 sudo make install
 skcli -h
 ```
@@ -40,6 +41,7 @@ skcli -h
 git clone https://github.com/snakesocks/snakesocks.git
 cd snakesocks
 make server
+make default_modules
 sudo make install
 sksrv -h
 ```
