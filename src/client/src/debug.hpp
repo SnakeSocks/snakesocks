@@ -15,5 +15,9 @@ extern int _runtime_debugLevel;
 
 #define debug(level) debug_if(_runtime_debugLevel >= level)
 
+#include <iostream>
+#define LOG(level) debug(level) std::cout
+#define LOGF(level) debug(level) RLIB_DO_PRINTF
+#define RLIB_DO_PRINTF printf
 
 #endif //_SOCKSEX_DEBUG_H

@@ -17,8 +17,8 @@ int main_proc(config &conf)
     _runtime_debugLevel = conf.debugLevel;
     cout << "Setting debug level = " << _runtime_debugLevel << endl;
     client_module mod(conf.modulePath);
-    s5server sss(conf.bindIp, conf.bindPort, tunnel(conf.serverIp, conf.serverPort, conf.passphrase, std::move(mod)));
-    sss.run();
+    Socks5Server sss(conf.bindIp, conf.bindPort, tunnel(conf.serverIp, conf.serverPort, conf.passphrase, std::move(mod)));
+    sss.listen();
     return 0;
 }
 

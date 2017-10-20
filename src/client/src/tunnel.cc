@@ -85,7 +85,7 @@ fd tunnel::newConnection() const
     if(_ != 0) {
         WSACleanup();
         sysdie("getaddrinfo failed. Check network connection to %s:%d; returnval=%d, check `man getaddrinfo`'s return value.", serverIp.c_str(), serverPort, _); 
-    }   
+    }
     defer([p=paddr](){WSACleanup();freeaddrinfo(p);});
 
     bool success = false;
@@ -115,7 +115,7 @@ bool tunnel::doAuth(connect_info *conn) const
     defer([&](){std::free(authdat.str);});
     auto lengthBackup = authdat.length;
     authdat.length = htonl(authdat.length);
-    debug(3) printf("Authdat: length=%u\n", lengthBackup);
+    LOGF(3)("Authdat: length=%u\n", lengthBackup);
     if(-1 == fdIO::writen(connfd, &authdat.length, sizeof(authdat.length))) sysdie("Write failed.");
     if(-1 == fdIO::writen(connfd, authdat.str, lengthBackup)) sysdie("Write failed.");
 
