@@ -1,14 +1,15 @@
 #ifndef _SRC_FSTR_H
 #define _SRC_FSTR_H 1
 
+#include <rlib/require/cxx11>
+
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
 
-//#include <rlib/noncopyable.hpp>
-#include "noncopyable.hpp"
+#include <rlib/noncopyable.hpp>
 
 namespace rlib {
     class : private noncopyable
@@ -54,7 +55,7 @@ namespace rlib {
                 }
             }
         } //must free after usage.
-    } fstr;
+    } fstr_c;
 
     class : private noncopyable
     {
@@ -62,11 +63,11 @@ namespace rlib {
         template<typename... Args>
         std::string operator()(Args... args)
         {
-            char *res = fstr(args ...);
+            char *res = fstr_c(args ...);
             std::string s = res;
             free(res);
             return std::move(s);
         }
-    } fstr_cxx;
+    } fstr;
 }
 #endif //SRC_FSTR_H

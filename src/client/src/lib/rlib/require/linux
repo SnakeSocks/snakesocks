@@ -1,0 +1,17 @@
+#ifndef R_LINUX_REQUIRED
+#define R_LINUX_REQUIRED
+
+#include <rlib/sys/os.hpp>
+
+#ifndef LINUX
+#define LINUX 9876
+#else
+#error macro 'LINUX' is already defined.
+#endif
+#if __OS_ID__ != 9876
+#error Linux is required but not detected.
+#endif
+
+#undef LINUX
+
+#endif

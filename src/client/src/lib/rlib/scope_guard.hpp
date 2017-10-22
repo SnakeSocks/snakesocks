@@ -11,9 +11,9 @@
 #ifndef R_SCOPE_GUARD
 #define R_SCOPE_GUARD
 
-//#include <rlib/require/cxx11>
+#include <rlib/require/cxx11>
 #include <functional>
-#include "noncopyable.hpp"
+#include <rlib/noncopyable.hpp>
 
 namespace rlib {
     class scope_guard : private noncopyable
@@ -47,15 +47,10 @@ namespace rlib {
     };
 }
 
-// This is some crazy magic that helps produce __BASE__247
-// Vanilla interpolation of __BASE__##__LINE__ would produce __BASE____LINE__
-// I still can't figure out why it works, but it has to do with macro resolution ordering
-#define PP_CAT(a, b) PP_CAT_I(a, b)
-#define PP_CAT_I(a, b) PP_CAT_II(~, a ## b)
-#define PP_CAT_II(p, res) res
-#define RLIB_UNIQUE_NAME(base) PP_CAT(base, __COUNTER__)
+
 #ifndef defer
-#define defer(callable) ::rlib::scope_guard RLIB_UNIQUE_NAME(_guarder_id_) (callable)
+#include <rlib/macro.hpp>
+#define defer(callable) ::rlib::scope_guard MAKE_UNIQUE_NAME(_guarder_id_) (callable)
 #endif
 
 #define reinforce_scope_begin(guarderName, callable) scope_guard guarderName = callable; try{

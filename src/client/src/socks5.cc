@@ -1,8 +1,8 @@
 #include "socks5.hpp"
 
 #include "syserr.hpp"
-#include "sio.hpp"
-#include "scope_guard.hpp"
+#include <rlib/sys/sio.hpp>
+#include <rlib/scope_guard.hpp>
 #include "NetLib.hpp"
 #include "threadPool.hpp"
 #include "connection.hpp"

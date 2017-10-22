@@ -3,7 +3,9 @@
 #include "config.hpp"
 #include "syserr.hpp"
 
-#include <iostream>
+#include <rlib/opt.hpp>
+#include <rlib/print.hpp>
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -11,11 +13,13 @@
 int _runtime_debugLevel;
 
 using namespace std;
+using rlib::println;
+using rlib::print;
 
 int main_proc(config &conf)
 {
     _runtime_debugLevel = conf.debugLevel;
-    cout << "Setting debug level = " << _runtime_debugLevel << endl;
+    println("Setting debug level = ", _runtime_debugLevel);
     client_module mod(conf.modulePath);
     Socks5Server sss(conf.bindIp, conf.bindPort, tunnel(conf.serverIp, conf.serverPort, conf.passphrase, std::move(mod)));
     sss.listen();
@@ -25,7 +29,7 @@ int main_proc(config &conf)
 void display_usage()
 {
 #define n "\n"
-    printf(
+    print(
 #ifdef WIN32
             "SnakeSocks Client 1.2.0 Windows Edition" n n
 #else
@@ -36,24 +40,24 @@ void display_usage()
             "You can install and run module easily from configuration file," n
             "to determine how packets are encrypted, transmitted, etc." n n
             "Options:" n
-            "-s <server address>\tServer ip or domain" n
-            "-p <server port>\tServer listening port" n
-            "-k <passphrase>\tPassphrase" n
-            "-L <listen address>\tLocal address that socks5 server listens on" n
-            "-P <listen port>\tLocal port that socks5 server listens on" n
-            "-D <debug level>\tDebug level to set" n
-            "-m <path to module>\tModule path" n
+            "-s --server <server address>\tServer ip or domain" n
+            "-p --server-port <server port>\tServer listening port" n
+            "-k --passphrase <passphrase>\tPassphrase" n
+            "-L --listen <listen address>\tLocal address that socks5 server listens on" n
+            "-P --listen-port <listen port>\tLocal port that socks5 server listens on" n
+            "-D --debug <debug level>\tDebug level to set" n
+            "-m --mod <path to module>\tModule path" n
             n
 #ifdef WIN32
-            "-c <config file path>\tPath to config file(default: conf\\client.conf)" n
-            "                     \t    Use '-c NULL' to prevent me from looking for client.conf" n
+            "-c --conf <config file path>\tPath to config file(default: conf\\client.conf)" n
+            "                            \t    Use '-c NULL' to prevent me from looking for client.conf" n
 #else
-            "-c <config file path>\tPath to config file(default: /etc/snakesocks/conf/client.conf)" n
-            "                     \t    Use '-c NULL' to prevent me from looking for client.conf" n
-            "-d\tRun client as daemon" n
-            "-l <log file name>\tLog file for daemon mode(default: /var/log/skcli.log)" n
+            "-c --conf <config file path>\tPath to config file(default: /etc/snakesocks/conf/client.conf)" n
+            "                            \t    Use '-c NULL' to prevent me from looking for client.conf" n
+            "-d --daemon\tRun client as daemon" n
+            "-l --daemon-log <log file name>\tLog file for daemon mode(default: /var/log/skcli.log)" n
 #endif
-            "-h\tShow this message" n n
+            "-h --help\tShow this message" n n
             "Published on GNU license V2." n
     );
 #undef n
@@ -61,95 +65,117 @@ void display_usage()
 
 int ____main(int arglen, char **argv)
 {
-    int dflag = 0;
-    char *confPath = NULL;
-    char *daemonLogFilePath = NULL;
-    char *serverAddr = NULL, *serverPort = NULL, *passP = NULL, *listenAddr = NULL, *listenPort = NULL;
-    char *debugLev = NULL, *modPath = NULL;
-    int index;
-    int c;
+    rlib::opt_parser args(arglen, argv);
 
-    opterr = 0;
+    if(args.getBoolArg("--help", "-h"))
+    {
+        display_usage();
+        return 0;
+    }
 
-    while ((c = getopt (arglen, argv, "c:dhl:s:p:k:L:P:D:m:")) != -1)
-        switch (c)
-        {
-            case 'd':
-                dflag = 1;
-                break;
-            case 'c':
-                confPath = optarg;
-                break;
-            case 'h':
-                display_usage();
-                exit(0);
-                break;
-            case 'l':
-                daemonLogFilePath = optarg;
-                break;
-            case 's':
-                serverAddr = optarg;
-                break;
-            case 'p':
-                serverPort = optarg;
-                break;
-            case 'k':
-                passP = optarg;
-                break;
-            case 'L':
-                listenAddr = optarg;
-                break;
-            case 'P':
-                listenPort = optarg;
-                break;
-            case 'D':
-                debugLev = optarg;
-                break;
-            case 'm':
-                modPath = optarg;
-                break;
-            case '?':
-                if (optopt == 'c')
-                    printf("Option -%c requires an argument.\n", optopt);
-                else if (isprint (optopt))
-                    printf("Unknown option `-%c'.\n", optopt);
-                else
-                    printf("Unknown option character `\\x%x'.\n", optopt);
-                display_usage();
-                return 1;
-            default:
-                abort();
-        }
+    bool dflag = args.getBoolArg("--daemon", "-d");
+    string confPath = args.getValueArg("--conf", "-c");
+    string daemonLogFilePath = args.getValueArg("--daemon-log", "-l");
+    string serverAddr = args.getValueArg("--server", "-s");
+    string serverPort = args.getValueArg("--server-port", "-p");
+    string passP = args.getValueArg("--passphrase", "-k");
+    string listenAddr = args.getValueArg("--listen", "-L");
+    string listenPort = args.getValueArg("--listen-port", "-P");
+    string debugLev = args.getValueArg("--debug", "-D");
+    string modPath = args.getValueArg("--mod", "-m");
+
+    if(!args.allArgDone())
+        println("Warning: some ill formed arguments are ignored.");
+
+//    int dflag = 0;
+//    char *confPath = NULL;
+//    char *daemonLogFilePath = NULL;
+//    char *serverAddr = NULL, *serverPort = NULL, *passP = NULL, *listenAddr = NULL, *listenPort = NULL;
+//    char *debugLev = NULL, *modPath = NULL;
+//    int index;
+//    int c;
+//
+//    opterr = 0;
+//
+//    while ((c = getopt (arglen, argv, "c:dhl:s:p:k:L:P:D:m:")) != -1)
+//        switch (c)
+//        {
+//            case 'd':
+//                dflag = 1;
+//                break;
+//            case 'c':
+//                confPath = optarg;
+//                break;
+//            case 'h':
+//                display_usage();
+//                exit(0);
+//                break;
+//            case 'l':
+//                daemonLogFilePath = optarg;
+//                break;
+//            case 's':
+//                serverAddr = optarg;
+//                break;
+//            case 'p':
+//                serverPort = optarg;
+//                break;
+//            case 'k':
+//                passP = optarg;
+//                break;
+//            case 'L':
+//                listenAddr = optarg;
+//                break;
+//            case 'P':
+//                listenPort = optarg;
+//                break;
+//            case 'D':
+//                debugLev = optarg;
+//                break;
+//            case 'm':
+//                modPath = optarg;
+//                break;
+//            case '?':
+//                if (optopt == 'c')
+//                    printf("Option -%c requires an argument.\n", optopt);
+//                else if (isprint (optopt))
+//                    printf("Unknown option `-%c'.\n", optopt);
+//                else
+//                    printf("Unknown option character `\\x%x'.\n", optopt);
+//                display_usage();
+//                return 1;
+//            default:
+//                abort();
+//        }
 
     config conf;
-    if(confPath && (strcmp(confPath, "NULL") == 0))
+    if(confPath == "NULL")
     { // NO configuration file.
-        printf("No config mode.\n");
-        conf.daemonLogFile = daemonLogFilePath ? daemonLogFilePath : "/var/log/skcli.log"; //Not required.
+        println("No config mode.");
+        conf.daemonLogFile = daemonLogFilePath.empty() ? daemonLogFilePath : std::string("/var/log/skcli.log"); //Not required.
 
-        if(!serverAddr) die("servAddr not set."); conf.serverIp = serverAddr;
-        if(!serverPort) die("servPort not set."); conf.serverPort = atoi(serverPort);
-        if(!passP) die("passphrase not set."); conf.passphrase = passP;
-        if(!listenAddr) die("bindAddr not set."); conf.bindIp = listenAddr;
-        if(!listenPort) die("bindPort not set."); conf.bindPort = atoi(listenPort);
-        if(!debugLev) die("debugLevel not set."); conf.debugLevel = atoi(debugLev);
-        if(!modPath) die("modulePath not set."); conf.modulePath = modPath;
+        if(serverAddr.empty()) die("servAddr not set."); conf.serverIp = serverAddr;
+        if(serverPort.empty()) die("servPort not set."); conf.serverPort = (uint16_t)stoi(serverPort);
+        if(passP.empty()) die("passphrase not set."); conf.passphrase = passP;
+        if(listenAddr.empty()) die("bindAddr not set."); conf.bindIp = listenAddr;
+        if(listenPort.empty()) die("bindPort not set."); conf.bindPort = (uint16_t)stoi(listenPort);
+        if(debugLev.empty()) die("debugLevel not set."); conf.debugLevel = stoi(debugLev);
+        if(modPath.empty()) die("modulePath not set."); conf.modulePath = modPath;
     }
     else
     {
 #ifdef WIN32
-        conf.load(confPath == NULL ? "conf\\client.conf" : confPath);
+        conf.load(confPath.empty() ? std::string("conf\\client.conf") : confPath);
 #else
-        conf.load(confPath == NULL ? "/etc/snakesocks/conf/client.conf" : confPath);
+        conf.load(confPath.empty() ? std::string("/etc/snakesocks/conf/client.conf") : confPath);
 #endif
-        if(daemonLogFilePath) conf.daemonLogFile = daemonLogFilePath;
-        if(serverAddr) conf.serverIp = serverAddr;
-        if(serverPort) conf.serverPort = atol(serverPort);
-        if(passP) conf.passphrase = passP;
-        if(listenAddr) conf.bindIp = listenAddr;
-        if(listenPort) conf.bindPort = atol(listenPort);
-        if(debugLev) conf.debugLevel = atoi(debugLev);
-        if(modPath) conf.modulePath = modPath;
+        if(!daemonLogFilePath.empty()) conf.daemonLogFile = daemonLogFilePath;
+        if(!serverAddr.empty()) conf.serverIp = serverAddr;
+        if(!serverPort.empty()) conf.serverPort = (uint16_t)stoi(serverPort);
+        if(!passP.empty()) conf.passphrase = passP;
+        if(!listenAddr.empty()) conf.bindIp = listenAddr;
+        if(!listenPort.empty()) conf.bindPort = (uint16_t)stoi(listenPort);
+        if(!debugLev.empty()) conf.debugLevel = stoi(debugLev);
+        if(!modPath.empty()) conf.modulePath = modPath;
     }
 
     if(dflag)
@@ -186,7 +212,7 @@ int main(int arglen, char **argv)
 	try {____main(arglen, argv);}
 	catch (std::exception &e) 
 	{
-		cout << "Uncaught Exception: " << ' ' << e.what() << endl;
+		println("Uncaught Exception: ", e.what());
 		return 2;
 	}
 	return 0;

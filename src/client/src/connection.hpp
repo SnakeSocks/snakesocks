@@ -7,8 +7,8 @@
 #include "syserr.hpp"
 
 #include <string>
-#include "sio.hpp"
-#include "noncopyable.hpp"
+#include <rlib/sys/sio.hpp>
+#include <rlib/noncopyable.hpp>
 
 using std::string;
 

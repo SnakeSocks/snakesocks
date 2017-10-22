@@ -1,7 +1,7 @@
 #include "tunnel.hpp"
 #include "syserr.hpp"
-#include "sio.hpp"
-#include "scope_guard.hpp"
+#include <rlib/sys/sio.hpp>
+#include <rlib/scope_guard.hpp>
 #include "NetLib.hpp"
 
 using namespace rlib;

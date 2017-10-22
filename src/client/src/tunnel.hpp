@@ -5,7 +5,7 @@
 #include "debug.hpp"
 
 #include <string>
-#include "noncopyable.hpp"
+#include <rlib/noncopyable.hpp>
 using std::string;
 
 #ifndef WIN32

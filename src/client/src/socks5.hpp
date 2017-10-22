@@ -4,8 +4,7 @@
 #include "tunnel.hpp"
 
 #include <string>
-//#include <boost/core/noncopyable.hpp>
-#include "noncopyable.hpp"
+#include <rlib/noncopyable.hpp>
 #include "connection.hpp"
 using std::string;
 

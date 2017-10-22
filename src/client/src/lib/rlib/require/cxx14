@@ -1,0 +1,8 @@
+#ifndef R_CXX14_REQUIRED
+#define R_CXX14_REQUIRED
+
+#if __cplusplus < 201402L
+#error C++14 is required.
+#endif
+
+#endif

@@ -10,16 +10,11 @@
 
 #include <functional>
 #include <list>
-#include <rlib/noncopyable.hpp>
+#include <boost/core/noncopyable.hpp>
 #include <thread>
 #include <mutex>
-#ifdef WIN32
-#include "mingw.thread.h"
-#include "mingw.mutex.h"
-#endif
-//TODO: Warning: fix unix and win
 
-class ThreadPool : private rlib::noncopyable
+class ThreadPool : private boost::noncopyable
 { //Note: The threadPool itself is not thread safe.
     class worker;
 public:

@@ -1,0 +1,8 @@
+#ifndef R_CXX11_REQUIRED
+#define R_CXX11_REQUIRED
+
+#if __cplusplus < 201103L
+#error C++11 is required.
+#endif
+
+#endif
