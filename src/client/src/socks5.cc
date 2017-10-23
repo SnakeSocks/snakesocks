@@ -158,7 +158,7 @@ void Socks5Server::dealConnection(fd connfd) {
 #endif
 
 auto Socks5Connection::unpackConnectionPacket(const char *pkgStr)
-{ //remoteInfo.dstIp is deprecated. remoteInfo.str must be freed.
+{ //remoteInfo.dstIp is deprecated. remoteInfo.payload contains remoteAddr, and must be processed by dns. It's a mallocd bin_str.
     if (pkgStr[0] != 5) die("Broken package. Incorrect ver.");
     char CMD = pkgStr[1];
     char ATYP = pkgStr[3];
