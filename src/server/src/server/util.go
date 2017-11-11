@@ -49,10 +49,8 @@ func (brw *BssRW) ReadB(data *C.binary_safe_string) error {
 		}
 	}
 	size := binary.BigEndian.Uint32(header)
-	if size > 10240000 {
-		EPrintf("Header : %v", header)
-		EPrintf("Size : %v", size)
-		PPrintf(errors.New("out of memory(by user)"))
+	if size > 64*1024*1024 {
+		return errors.New("Memory Boom!")
 	}
 	packet := make([]byte, size)
 	if n, err := io.ReadFull(brw, packet[:]); n != int(size) || err != nil {
