@@ -43,7 +43,7 @@ fd tunnel::newConnection() const
     hints.ai_socktype = SOCK_STREAM;
     auto _ = getaddrinfo(serverIp.c_str(), std::to_string(serverPort).c_str(), &hints, &paddr);
     if(_ != 0) sysdie("getaddrinfo failed. Check network connection to %s:%d; returnval=%d, check `man getaddrinfo`'s return value.", serverIp.c_str(), serverPort, _);
-    defer([p=paddr](){freeaddrinfo(p);});
+    defer([p=paddr]{freeaddrinfo(p);});
 
     bool success = false;
     for (addrinfo *rp = paddr; rp != NULL; rp = rp->ai_next) {
@@ -74,7 +74,7 @@ fd tunnel::newConnection() const
     SOCKET sockfd = INVALID_SOCKET;
     int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
     if (iResult != 0) sysdie("WSAStartup failed with error: %d\n", iResult);
-        
+ 
     addrinfo *paddr;
     addrinfo hints { 0 };
 
@@ -86,7 +86,7 @@ fd tunnel::newConnection() const
         WSACleanup();
         sysdie("getaddrinfo failed. Check network connection to %s:%d; returnval=%d, check `man getaddrinfo`'s return value.", serverIp.c_str(), serverPort, _); 
     }
-    defer([p=paddr](){WSACleanup();freeaddrinfo(p);});
+    defer([p=paddr]{WSACleanup();freeaddrinfo(p);});
 
     bool success = false;
     for (addrinfo *rp = paddr; rp != NULL; rp = rp->ai_next) {
@@ -95,7 +95,6 @@ fd tunnel::newConnection() const
             continue;
         int reuse = 1;
         if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(int)) < 0) sysdie("setsockopt(SO_REUSEADDR) failed");
-        //if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, (const char*)&reuse, sizeof(int)) < 0) sysdie("setsockopt(SO_REUSEPORT) failed");
         if (connect(sockfd, rp->ai_addr, rp->ai_addrlen) != SOCKET_ERROR) {
             success = true;
             break; /* Success */
@@ -112,21 +111,22 @@ bool tunnel::doAuth(connect_info *conn) const
 {
     fd connfd = conn->connect_fd;
     binary_safe_string authdat = mod.makeAuthQuery(conn);
-    defer([&](){std::free(authdat.str);});
+    defer([&]{std::free(authdat.str);});
     auto lengthBackup = authdat.length;
+    if(lengthBackup > 64 * 1024 * 1024) die("Fatal: memory out of range.");
     authdat.length = htonl(authdat.length);
     LOGF(3)("Authdat: length=%u\n", lengthBackup);
-    if(-1 == fdIO::writen(connfd, &authdat.length, sizeof(authdat.length))) sysdie("Write failed.");
-    if(-1 == fdIO::writen(connfd, authdat.str, lengthBackup)) sysdie("Write failed.");
+    fdIO::writen_ex(connfd, &authdat.length, sizeof(authdat.length));
+    fdIO::writen_ex(connfd, authdat.str, lengthBackup);
 
     uint32_t replyLen;
-    if(fdIO::readn(connfd, &replyLen, 4) == -1) sysdie("readn failed.");
+    fdIO::readn_ex(connfd, &replyLen, 4);
     replyLen = ntohl(replyLen);
 
-    if(replyLen > 1024 * 1024 * 1024) sysdie("Fatal: memory out of range. ");
+    if(replyLen > 64 * 1024 * 1024) die("Fatal: memory out of range. ");
     char *rbuf = (char *)malloc(replyLen);
-    defer([&](){std::free(rbuf);});
-    if(-1 == fdIO::readn(connfd, rbuf, replyLen)) sysdie("read failed.");
+    defer([&]{std::free(rbuf);});
+    fdIO::readn_ex(connfd, rbuf, replyLen);
 
     return mod.onAuthReply(rbuf, replyLen, conn);
 }

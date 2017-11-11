@@ -31,9 +31,9 @@ void display_usage()
 #define n "\n"
     print(
 #ifdef WIN32
-            "SnakeSocks Client 1.2.0 Windows Edition" n n
+            "SnakeSocks Client 1.3.0 Windows Edition" n n
 #else
-            "SnakeSocks Client 1.2.0" n n
+            "SnakeSocks Client 1.3.0" n n
 #endif
             "Usage: snakesockscli [OPTION...]" n
             "A extensible proxy which supports module-defined protocol behavior." n
@@ -86,66 +86,6 @@ int ____main(int arglen, char **argv)
 
     if(!args.allArgDone())
         println("Warning: some ill formed arguments are ignored.");
-
-//    int dflag = 0;
-//    char *confPath = NULL;
-//    char *daemonLogFilePath = NULL;
-//    char *serverAddr = NULL, *serverPort = NULL, *passP = NULL, *listenAddr = NULL, *listenPort = NULL;
-//    char *debugLev = NULL, *modPath = NULL;
-//    int index;
-//    int c;
-//
-//    opterr = 0;
-//
-//    while ((c = getopt (arglen, argv, "c:dhl:s:p:k:L:P:D:m:")) != -1)
-//        switch (c)
-//        {
-//            case 'd':
-//                dflag = 1;
-//                break;
-//            case 'c':
-//                confPath = optarg;
-//                break;
-//            case 'h':
-//                display_usage();
-//                exit(0);
-//                break;
-//            case 'l':
-//                daemonLogFilePath = optarg;
-//                break;
-//            case 's':
-//                serverAddr = optarg;
-//                break;
-//            case 'p':
-//                serverPort = optarg;
-//                break;
-//            case 'k':
-//                passP = optarg;
-//                break;
-//            case 'L':
-//                listenAddr = optarg;
-//                break;
-//            case 'P':
-//                listenPort = optarg;
-//                break;
-//            case 'D':
-//                debugLev = optarg;
-//                break;
-//            case 'm':
-//                modPath = optarg;
-//                break;
-//            case '?':
-//                if (optopt == 'c')
-//                    printf("Option -%c requires an argument.\n", optopt);
-//                else if (isprint (optopt))
-//                    printf("Unknown option `-%c'.\n", optopt);
-//                else
-//                    printf("Unknown option character `\\x%x'.\n", optopt);
-//                display_usage();
-//                return 1;
-//            default:
-//                abort();
-//        }
 
     config conf;
     if(confPath == "NULL")
@@ -212,7 +152,7 @@ int main(int arglen, char **argv)
 	try {____main(arglen, argv);}
 	catch (std::exception &e) 
 	{
-		println("Uncaught Exception: ", e.what());
+        println("Uncaught Exception: ", e.what());
 		return 2;
 	}
 	return 0;

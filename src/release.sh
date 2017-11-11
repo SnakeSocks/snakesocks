@@ -7,7 +7,7 @@ cd ..
 make clean
 
 rel=release/$ver/$arch
-mkdir -p $rel/mod > /dev/null 2>&1
+mkdir -p $rel/mods > /dev/null 2>&1
 
 make client && make server &&
 cp src/client/skcli $rel/ &&

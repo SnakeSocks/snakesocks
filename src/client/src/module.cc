@@ -19,8 +19,8 @@ bool client_module::onAuthReply(char *authdata, size_t len, connect_info *conn) 
     return _f_client_deal_auth_reply(conn, server_reply);
 }
 
-binary_safe_string client_module::encode(binary_safe_string payload, connect_info *conn, client_query addrTemplate) const // MUST copy a new data.
-{
+binary_safe_string client_module::encode(binary_safe_string payload, connect_info *conn, client_query addrTemplate) const
+{ //payload.str will be finally freed, and addrTemplate is passed by value.
     if(payload.length)
         addrTemplate.payload = payload;
 
@@ -39,7 +39,6 @@ client_query client_module::decode(binary_safe_string payload, connect_info *con
 #include "module-port.hpp"
 void client_module::loadSo(const string &filePath)
 {
-    RECORD
     using namespace ____trick;
     void *handle = dlopen(filePath.c_str(), RTLD_LAZY);
     char *errstr = NULL;

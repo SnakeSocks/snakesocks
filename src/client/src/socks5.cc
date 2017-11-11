@@ -14,11 +14,9 @@
 #include <csignal>
 #include <cstdlib>
 
-#include <boost/asio.hpp>
+//#include <boost/asio.hpp>
 
 using std::string;
-using std::cout;
-using std::endl;
 
 #ifndef WIN32
 using fd=int;
@@ -76,7 +74,7 @@ void Socks5Server::dealConnection(fd connfd) {
 
     if (-1 == ::listen(listenfd, 16)) sysdie("listen failed.");
 
-    cout << "Listening on " << bindIp << ":" << bindPort << endl;
+    LOG(1) << "Listening on " << bindIp << ":" << bindPort << std::endl;
 #ifndef ___NO_THREAD_POOL
     ThreadPool pool;
 #endif
@@ -136,7 +134,7 @@ void Socks5Server::dealConnection(fd connfd) {
 
     if(SOCKET_ERROR == ::listen(listenfd, 16)) sysdie("listen failed.");
 
-    cout << "Listening on " << bindIp << ":" << bindPort << endl;
+    LOG(1) << "Listening on " << bindIp << ":" << bindPort << std::endl;
 #ifndef ___NO_THREAD_POOL
     ThreadPool pool;
 #endif
@@ -162,50 +160,54 @@ auto Socks5Connection::unpackConnectionPacket(const char *pkgStr)
     if (pkgStr[0] != 5) die("Broken package. Incorrect ver.");
     char CMD = pkgStr[1];
     char ATYP = pkgStr[3];
-    client_query remoteInfo;
-    memset(remoteInfo.destination_ip, 0, 16);
+    addr_info remoteInfo;
+    uint16_t targetPort = 0;
+    //DO NOT delete these comment below PLEASE!!!!!!
     if (ATYP == 1)
     {
         //memcpy(remoteInfo.destination_ip, pkgStr + 4, 4);
         std::array<unsigned char, 4> bArr;
         memcpy(bArr.data(), pkgStr + 4, 4);
-        string v4addr = boost::asio::ip::address_v4(bArr).to_string();
-        std_string_to_bin_safe(v4addr, remoteInfo.payload);
-
-        remoteInfo.destination_port = *reinterpret_cast<const uint16_t *>(&pkgStr[8]);
+        //string v4addr = boost::asio::ip::address_v4(bArr).to_string();
+        //std_string_to_bin_safe(v4addr, remoteInfo.payload);
+        remoteInfo.set(bArr);
+        targetPort = (*reinterpret_cast<const uint16_t *>(&pkgStr[8]));
     } else if (ATYP == 4)
     {
         //memcpy(remoteInfo.destination_ip, pkgStr + 4, 16);
         std::array<unsigned char, 16> bArr;
         memcpy(bArr.data(), pkgStr + 4, 16);
-        string v6addr = boost::asio::ip::address_v6(bArr).to_string();
-        std_string_to_bin_safe(v6addr, remoteInfo.payload);
-        remoteInfo.destination_port = *reinterpret_cast<const uint16_t *>(&pkgStr[20]);
+        //string v6addr = boost::asio::ip::address_v6(bArr).to_string();
+        //std_string_to_bin_safe(v6addr, remoteInfo.payload);
+        remoteInfo.set(bArr);
+        targetPort = (*reinterpret_cast<const uint16_t *>(&pkgStr[20]));
     } else if (ATYP == 3)
     {
         size_t addrlen = (size_t) pkgStr[4];
-        remoteInfo.destination_port = *reinterpret_cast<const uint16_t *>(&pkgStr[5 + addrlen]);
+        targetPort = (*reinterpret_cast<const uint16_t *>(&pkgStr[5 + addrlen]));
 
-        remoteInfo.payload.length = addrlen;
-        remoteInfo.payload.null_terminated = false;
-        remoteInfo.payload.str = (char *) malloc(addrlen);
-        memcpy(remoteInfo.payload.str, pkgStr + 5, addrlen);
+        char *sbuffer = (char *)malloc(addrlen+1);
+        defer([&]{free(sbuffer);});
+        memcpy(sbuffer, pkgStr + 5, addrlen);
+        sbuffer[addrlen] = '\0';
+
+        remoteInfo.set(std::move(std::string(sbuffer)));
     } else
         die("Broken package.Invalid ATYP");
 
-    remoteInfo.destination_port = htons(remoteInfo.destination_port);
+    remoteInfo.setport(targetPort); //WARNING:: htons removed here!
     return std::make_tuple(CMD, ATYP, remoteInfo);
 }
 
 void Socks5Connection::handshake_pkgs()
 {
     char headBuf[258];
-    if (fdIO::readn(m_fd, headBuf, 2) == -1) sysdie("readn socket failed");
+    fdIO::readn_ex(m_fd, headBuf, 2);
 
     if (headBuf[0] != (char) 5) die("Broken protocol. (Incorrect protocol number)");
     size_t methodSize = (size_t) headBuf[1];
 
-    if (fdIO::readn(m_fd, headBuf + 2, methodSize) == -1) sysdie("readn socket failed");
+    fdIO::readn_ex(m_fd, headBuf + 2, methodSize);
 
     bool methodOk = false;
     for (size_t cter = 0; cter < methodSize; ++cter)
@@ -219,13 +221,13 @@ void Socks5Connection::handshake_pkgs()
     headBuf[0] = 5;
     headBuf[1] = 0;
     if (!methodOk) headBuf[1] = (char) 255;
-    if (fdIO::writen(m_fd, headBuf, 2) == -1) sysdie("Failed to write socket.");
+    fdIO::writen_ex(m_fd, headBuf, 2);
 }
 
-client_query Socks5Connection::connect_pkgs()
+Socks5Connection::addr_info Socks5Connection::connect_pkgs()
 {
     char buf[263];
-    if (fdIO::readn(m_fd, buf, 5) == -1) sysdie("readn failed.");
+    fdIO::readn_ex(m_fd, buf, 5);
     size_t addrlen = 0;
     bool useDomain = false;
     switch (buf[3])
@@ -243,21 +245,21 @@ client_query Socks5Connection::connect_pkgs()
         default:
             die("Wrong ATYP in connect packet.");
     }
-    if (fdIO::readn(m_fd, buf + 5, addrlen + 1) == -1) sysdie("readn failed.");
+    fdIO::readn_ex(m_fd, buf + 5, addrlen + 1);
 
     char CMD, ATYP;
-    client_query remoteInfo;
+    addr_info remoteInfo;
     std::tie(CMD, ATYP, remoteInfo) = unpackConnectionPacket(buf);
-    rlib::scope_guard remoteInfoGuarder = [&](){free(remoteInfo.payload.str);};
+    //rlib::scope_guard remoteInfoGuarder = [&](){free(remoteInfo.payload.str);};
     if (CMD != 01)
-        die("Request can not be processed.(CMD=%d)", (int) CMD);
+        die("Socks5 request can not be processed.(CMD=%d)", (int) CMD);
 
     //Make success reply.
     buf[1] = 0;
     auto pkgLen = addrlen + 6;
     fdIO::writen_ex(m_fd, buf, pkgLen);
 
-    remoteInfoGuarder.dismiss();
+    //remoteInfoGuarder.dismiss();
     return remoteInfo;
 }
 
@@ -274,36 +276,40 @@ void printTime()
 }
 */
 
-client_query Socks5Connection::dns_pkgs(SnakeConnection &nextHop, client_query &rawAddr)
+Socks5Connection::addr_info Socks5Connection::dns_pkgs(SnakeConnection &nextHop, addr_info &rawAddr)
 {
+    if(rawAddr.type != addr_info::addr_t::domain)
+        return rawAddr;
+    auto pkg = rawAddr.make_dns_query_body();
+    LOG(3) << rawAddr.print() << std::endl;
+
     // Send first data pack (DNS)
-    binary_safe_string firstPack = m_server.skserver.mod.encode(binary_safe_string{false, 0, nullptr}, nextHop.GetConnInfo(), rawAddr);
-    defer([&](){std::free(firstPack.str);});
-    auto lengthBackup = firstPack.length;
-    firstPack.length = htonl(firstPack.length);
-    LOG(3) << "First data pack to send: len=" << lengthBackup << std::endl;
-    nextHop.strict_sendn(&firstPack.length, sizeof(firstPack.length));
-    nextHop.strict_sendn(firstPack.str, lengthBackup);
+    binary_safe_string firstPack = m_server.skserver.mod.encode(pkg.payload, nextHop.GetConnInfo(), pkg);
+    defer([&]{std::free(firstPack.str);});
+    LOG(3) << "DNS pack to send: len=" << firstPack.length << std::endl;
+    auto lengthNetByte = htonl(firstPack.length);
+    nextHop.sendn(&lengthNetByte, sizeof(firstPack.length));
+    nextHop.sendn(firstPack.str, firstPack.length);
 
     // Get DNS responce.
     binary_safe_string firstReturnPack;
-    nextHop.strict_recvn(&firstReturnPack.length, sizeof(firstReturnPack.length));
+    nextHop.recvn(&firstReturnPack.length, sizeof(firstReturnPack.length));
     firstReturnPack.length = ntohl(firstReturnPack.length);
-    if(firstReturnPack.length == 0xff7f0000) //Unknown error.
-    {
-        std::printf("Conn%d:Fatal error prevented. Unknown packet 0xff7f0000 appeared after we solved this bug. Please report!!!\n", m_fd);
-        abort();
-    }
     firstReturnPack.str = (char *) malloc(firstReturnPack.length);
-    nextHop.strict_recvn(firstReturnPack.str, firstReturnPack.length);
-    client_query realTemplate = m_server.skserver.mod.decode(firstReturnPack, nextHop.GetConnInfo());
+    nextHop.recvn(firstReturnPack.str, firstReturnPack.length);
+    client_query dnsResponse = m_server.skserver.mod.decode(firstReturnPack, nextHop.GetConnInfo());
 
+    addr_info goodaddr(reinterpret_cast<std::array<uint8_t, 16>&>(dnsResponse.destination_ip), rawAddr.getport());
+    LOG(3) << "dns raw responce: " << goodaddr.print() << std::endl;
+    goodaddr.try_6to4();
+    LOG(3) << "dns responce:" << goodaddr.print() << std::endl;
     // First data pack done.
-    return realTemplate;
+    return goodaddr;
 }
 
-void Socks5Connection::passData(SnakeConnection &nextHop, const client_query &templateQueryWithIp)
+void Socks5Connection::passData(SnakeConnection &nextHop, const addr_info &resolvedAddr)
 {
+    auto templateQueryWithIp = resolvedAddr.to_query_template();
     fd_set rset;
     FD_ZERO(&rset);
     while (true)
@@ -329,8 +335,8 @@ void Socks5Connection::passData(SnakeConnection &nextHop, const client_query &te
             encodedDat.length = htonl(encodedDat.length);
             LOG(3) << "Data pack to send: len=" << lengthBackup << std::endl;
             LOG(4) << NetLib::printData(encodedDat.str, lengthBackup) << std::endl;
-            nextHop.strict_sendn(&encodedDat.length, sizeof(encodedDat.length));
-            nextHop.strict_sendn(encodedDat.str, lengthBackup);
+            nextHop.sendn(&encodedDat.length, sizeof(encodedDat.length));
+            nextHop.sendn(encodedDat.str, lengthBackup);
         }
         if (FD_ISSET(nextHop.GetConnFd(), &rset))
         {
@@ -345,8 +351,7 @@ void Socks5Connection::passData(SnakeConnection &nextHop, const client_query &te
             LOG(4) << NetLib::printData(bridgeBuffer, binLen) << std::endl;
             auto decodedDat = m_server.skserver.mod.decode(binary_safe_string{false, binLen, (char *) bridgeBuffer}, nextHop.GetConnInfo()).payload;
             defer([&](){free(decodedDat.str);});
-            if(sockIO::sendn(m_fd, decodedDat.str, decodedDat.length, MSG_NOSIGNAL) == -1)
-                sysdie("write failed");
+            sockIO::sendn_ex(m_fd, decodedDat.str, decodedDat.length, MSG_NOSIGNAL);
         }
     }
     _close_conn:;

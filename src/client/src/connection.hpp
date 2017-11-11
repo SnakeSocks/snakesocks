@@ -49,22 +49,6 @@ public:
         rlib::sockIO::recvn_ex(connfd, (char *)data, len, MSG_NOSIGNAL);
     }
 
-    void strict_sendn(const void *data, size_t len) {
-        if(rlib::sockIO::sendn_ex(connfd, (const char *)data, len, MSG_NOSIGNAL) < len)
-            throw std::runtime_error("invalid sendn");
-    }
-    void strict_recvn(void *data, size_t len) {
-        if(rlib::sockIO::recvn_ex(connfd, (char *)data, len, MSG_NOSIGNAL) < len)
-            throw std::runtime_error("invalid recvn");
-    }
-
-    void sendn_and_free_on_err(const void *data, size_t len) {
-        auto ret = rlib::sockIO::sendn(connfd, (const char *)data, len, MSG_NOSIGNAL);
-        if(ret == -1) {
-            free((void *)data);
-            sysdie("SendnAndFree failed.");
-        } 
-    }
     void recvn_and_free_on_err(void *data, size_t len) {
         auto ret = rlib::sockIO::recvn(connfd, (char *)data, len, MSG_NOSIGNAL);
         if(ret == -1) { 

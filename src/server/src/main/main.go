@@ -3,5 +3,6 @@ package main
 import "server"
 
 func main() {
-	server.StartServer()
+	s := server.Server{}
+	s.Start()
 }

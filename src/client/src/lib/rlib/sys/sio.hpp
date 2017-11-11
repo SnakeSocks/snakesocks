@@ -29,12 +29,12 @@ namespace rlib {
                     else
                         return (-1);
                 } else if (nread == 0)
-                    break;              /* EOF */
+                    return (-1);              /* EOF */
             
                 nleft -= nread;
                 ptr += nread;
             }
-            return (n - nleft);         /* return >= 0 */
+            return (n);         /* return success */
         }
         static ssize_t writen(int fd, const void *vptr, size_t n) noexcept //Return -1 on error, read bytes on success, blocks until nbytes done.
         {
@@ -96,7 +96,7 @@ namespace rlib {
                 currvptr = (char *)vptr + current / 2;
             }
         }
-        static void readn_ex(int fd, void *vptr, size_t n) //with exception, never return error.
+        static void readn_ex(int fd, void *vptr, size_t n) //never return error.
         {
             auto ret = readn(fd, vptr, n);
             if(ret == -1) throw std::runtime_error("readn failed.");
@@ -132,12 +132,12 @@ namespace rlib {
                     else
                         return (-1);
                 } else if (nread == 0)
-                    break;              /* EOF */
+                    return -1;              /* EOF */
             
                 nleft -= nread;
                 ptr += nread;
             }
-            return (n - nleft);         /* return >= 0 */
+            return (n);         /* return success */
         }
         static ssize_t sendn(int fd, const void *vptr, size_t n, int flags) noexcept //Return -1 on error, read bytes on success, blocks until nbytes done.
         {
@@ -199,11 +199,10 @@ namespace rlib {
                 currvptr = (char *)vptr + current / 2;
             }
         }
-        static ssize_t recvn_ex(int fd, void *vptr, size_t n, int flags) //with exception, never return error.
+        static void recvn_ex(int fd, void *vptr, size_t n, int flags) //return read bytes.
         {
             auto ret = recvn(fd, vptr, n, flags);
             if(ret == -1) throw std::runtime_error("recvn failed.");
-            return ret;
         }
         static ssize_t sendn_ex(int fd, const void *vptr, size_t n, int flags)
         {
@@ -248,12 +247,12 @@ namespace rlib {
                     else
                         return (-1);
                 } else if (nread == 0)
-                    break;              /* EOF */
+                    return (-1);              /* EOF */
             
                 nleft -= nread;
                 ptr += nread;
             }
-            return (n - nleft);         /* return >= 0 */
+            return (n);         /* return >= 0 */
         }
         static ssize_t sendn(SOCKET fd, const char *vptr, size_t n, int flags) noexcept //Return -1 on error, read bytes on success, blocks until nbytes done.
         {
@@ -324,11 +323,10 @@ namespace rlib {
                 currvptr = (char *)vptr + current / 2;
             }
         }
-        static ssize_t recvn_ex(SOCKET fd, char *vptr, size_t n, int flags) //with exception, never return error.
+        static void recvn_ex(SOCKET fd, char *vptr, size_t n, int flags) //never return error.
         {
             auto ret = recvn(fd, vptr, n, flags);
             if(ret == -1) throw std::runtime_error("recvn failed.");
-			return ret;
         }
         static ssize_t sendn_ex(SOCKET fd, const char *vptr, size_t n, int flags)
         {
@@ -359,7 +357,7 @@ namespace rlib {
         {
             return sockIO::recvall(fd, pvptr, initSize, 0);
         }
-        static ssize_t readn_ex(SOCKET fd, void *vptr, size_t n) //with exception, never return error.
+        static void readn_ex(SOCKET fd, void *vptr, size_t n) //return read bytes.
         {
             return sockIO::recvn_ex(fd, (char *)vptr, n, 0);
         }

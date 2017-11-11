@@ -26,22 +26,64 @@ void call_server_connection_close(connect_info *conf){
 import "C"
 
 import (
-	"encoding/binary"
-	"flag"
-	"fmt"
-	"github.com/go-ini/ini"
 	"io"
-	"log"
 	"net"
-	"os"
+	"encoding/binary"
 	"unsafe"
+	"log"
+	"errors"
+	"strconv"
 )
 
-var Debug int
-var DylibPath string
-var ConfigPath string
-var Port int
-var Passphrase string
+type BssRW struct {
+	net.Conn
+}
+
+func (brw *BssRW) ReadB(data *C.binary_safe_string) error {
+	header := make([]byte, 4)
+	if n, err := io.ReadFull(brw, header[:]); n != 4 || err != nil {
+		if err != nil {
+			return err
+		} else {
+			return errors.New("Reading " + strconv.Itoa(n) + "!=" + strconv.Itoa(int(4)) + " bytes")
+		}
+	}
+	size := binary.BigEndian.Uint32(header)
+	if size > 10240000 {
+		EPrintf("Header : %v", header)
+		EPrintf("Size : %v", size)
+		PPrintf(errors.New("out of memory(by user)"))
+	}
+	packet := make([]byte, size)
+	if n, err := io.ReadFull(brw, packet[:]); n != int(size) || err != nil {
+		if err != nil {
+			return err
+		} else {
+			return errors.New("Reading " + strconv.Itoa(n) + "!=" + strconv.Itoa(int(size)) + " bytes")
+		}
+	}
+	data.length = C.uint32_t(size)
+	data.str = C.CString(string(packet))
+	//DPrintf("[BssRW]: Read: %v",string(packet))
+	return nil
+}
+
+func (brw *BssRW) WriteB(data C.binary_safe_string) error {
+	defer C.free(unsafe.Pointer(data.str))
+	dataHeader := make([]byte, 4)
+	binary.BigEndian.PutUint32(dataHeader, uint32(data.length))
+	dataBody := []byte(C.GoBytes(unsafe.Pointer(data.str), C.int(data.length)))
+	_, err := brw.Write(dataHeader)
+	//DPrintf("[BssRW]: Write: %v",string(dataB))
+	if err != nil {
+		return err
+	}
+	_, err = brw.Write(dataBody)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 2 {
@@ -62,100 +104,4 @@ func PPrintf(err error) {
 		log.Panic(err)
 	}
 	return
-}
-
-func initConfig() error {
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "SnakeSocks Server 1.2\n\n")
-		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "\nPublished on GNU license V2.\n")
-	}
-	flag.StringVar(&ConfigPath, "c", "/etc/snakesocks/conf/server.conf", "proxy config path")
-	flag.IntVar(&Port, "p", 8080, "server monitor Port")
-	flag.IntVar(&Debug, "d", 2, "debug level(1,2,3)")
-	flag.StringVar(&DylibPath, "l", "modules/libmymodule.so", "dynamic library path")
-	flag.StringVar(&Passphrase, "", "", "the Passphrase for encypt")
-	flag.Parse()
-
-	cfg, err := ini.Load(ConfigPath)
-	if err != nil {
-		return err
-	}
-	core := cfg.Section("core")
-	extra := cfg.Section("extra")
-	if DylibPath == "modules/libmymodule.so" {
-		DylibPath = core.Key("module").String()
-	}
-	if Port == 8080 {
-		Port, err = core.Key("port").Int()
-		if err != nil {
-			return err
-		}
-	}
-	if Debug == 2 {
-		Debug, err = extra.Key("debugLevel").Int()
-		if err != nil {
-			return err
-		}
-	}
-	if Passphrase == "" {
-		Passphrase = core.Key("passphrase").String()
-	}
-
-	return nil
-}
-
-func readBinarySafeString(conn net.Conn, data *C.binary_safe_string) bool {
-	headers, err := readN(conn, 4)
-	if err != nil {
-		if err != io.EOF {
-			DPrintf("Err: %v", err)
-		}
-		return false
-	}
-	//dataNullTerminated := headers[0] == 1
-	//data.null_terminated = C.bool(dataNullTerminated)
-	dataLength := binary.BigEndian.Uint32(headers)
-	DPrintf("headers: %v to datalength : %v", headers, dataLength)
-	data.length = C.uint32_t(dataLength)
-	if dataLength >= 1000000 {
-		DPrintf("Boooooooom!!!!!!!!")
-		return false
-	}
-	content, err := readN(conn, int(dataLength))
-	if err != nil {
-		DPrintf("Err: %v", err)
-		return false
-	}
-	DPrintf("data: %v", content)
-	data.str = C.CString(string(content))
-	return true
-}
-
-func writeBinarySafeString(conn net.Conn, data C.binary_safe_string) bool {
-	dataB := make([]byte, 4)
-	binary.BigEndian.PutUint32(dataB, uint32(data.length))
-	dataB = append(dataB, []byte(C.GoBytes(unsafe.Pointer(data.str), C.int(data.length)))...)
-	_, err := conn.Write(dataB[:])
-	DPrintf("Write binary safe string size %v:%v", uint32(data.length), dataB)
-	if err != nil {
-		if err != io.EOF {
-			DPrintf("Err: %v", err)
-		}
-		return false
-	}
-	return true
-}
-
-func readN(conn net.Conn, n int) ([]byte, error) {
-	dataB := make([]byte, n)
-	nowNum := 0
-	for nowNum < n {
-		readNum, readErr := conn.Read(dataB[nowNum:])
-		if readErr != nil {
-			return nil, readErr
-		}
-		nowNum += readNum
-	}
-	return dataB, nil
 }

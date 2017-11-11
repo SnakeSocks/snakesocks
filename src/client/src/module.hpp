@@ -45,15 +45,15 @@ public:
     bool onAuthReply(char *authdata, size_t len, connect_info *conn) const;
     binary_safe_string encode(binary_safe_string payload, connect_info *conn, client_query payload_template) const;
     client_query decode(binary_safe_string payload, connect_info *conn) const;
-    void on_close_conn(connect_info *p) const{
+    void on_close_conn(connect_info *p) const {
         _f_client_connection_close(p);
     }
 private:
-    std::function<binary_safe_string (connect_info *)> _f_client_make_auth_query;
-    std::function<_Bool (connect_info *, binary_safe_string)> _f_client_deal_auth_reply;
-    std::function<binary_safe_string (connect_info *, client_query)> _f_client_encode;
-    std::function<client_query (connect_info *, binary_safe_string)> _f_client_decode;
-    std::function<void (connect_info *)> _f_client_connection_close;
+    std::function<decltype(port_c::client_make_auth_query)> _f_client_make_auth_query;
+    std::function<decltype(port_c::client_deal_auth_reply)> _f_client_deal_auth_reply;
+    std::function<decltype(port_c::client_encode)> _f_client_encode;
+    std::function<decltype(port_c::client_decode)> _f_client_decode;
+    std::function<decltype(port_c::client_connection_close)> _f_client_connection_close;
 #ifndef WIN32
     void *so_handle;
 #else
