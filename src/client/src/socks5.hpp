@@ -3,7 +3,6 @@
 
 #include "tunnel.hpp"
 
-#include <arpa/inet.h>
 #include <string>
 #include <algorithm>
 #include <rlib/noncopyable.hpp>
@@ -11,6 +10,7 @@
 using std::string;
 
 #ifndef WIN32
+#include <arpa/inet.h>
 using fd=int;
 #else
 #include <winsock2.h>

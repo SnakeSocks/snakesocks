@@ -97,7 +97,7 @@ void Socks5Server::dealConnection(fd connfd) {
 #include <winsock2.h>
 #include <ws2tcpip.h>
 //Winsock impl
-[[noreturn]] void s5server::run()
+[[noreturn]] void Socks5Server::listen()
 {
     WSADATA wsaData;
     SOCKET listenfd = INVALID_SOCKET;
