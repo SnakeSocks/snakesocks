@@ -5,7 +5,7 @@
 #include "debug.hpp"
 
 #include <string>
-#include <rlib/noncopyable.hpp>
+#include <rlib/class_decorator.hpp>
 using std::string;
 
 #ifndef WIN32

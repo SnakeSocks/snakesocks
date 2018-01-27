@@ -13,7 +13,7 @@
 
 #include <rlib/require/cxx11>
 #include <functional>
-#include <rlib/noncopyable.hpp>
+#include <rlib/class_decorator.hpp>
 
 namespace rlib {
     class scope_guard : private noncopyable
@@ -38,9 +38,6 @@ namespace rlib {
             if(f) f();
             dismiss();
         }
-
-        scope_guard(const scope_guard&) = delete;
-        void operator = (const scope_guard&) = delete;
 
     private:
         std::function<void()> f;

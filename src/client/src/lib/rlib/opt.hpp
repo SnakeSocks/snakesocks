@@ -10,8 +10,8 @@ raise an exception on some rare ill formed arguments.
 #define R_OPT_HPP
 
 #include <rlib/require/cxx14>
-#include <rlib/noncopyable.hpp>
-#include <rlib/string/fstr.hpp>
+#include <rlib/class_decorator.hpp>
+#include <rlib/string/string.hpp>
 #include <rlib/scope_guard.hpp>
 
 #include <string>
@@ -41,7 +41,7 @@ namespace rlib {
                 return false;
             });
             if(required && pos == args.cend())
-                throw std::invalid_argument(fstr("Required argument '%s' not provided.", argName.c_str()));
+                throw std::invalid_argument(format_string("Required argument '{}' not provided.", argName));
             if(pos == args.cend())
                 return std::move(std::string(""));
             defer(([&, pos]{if(!useEqualSym) args.erase(pos+1); args.erase(pos);}));
@@ -50,7 +50,7 @@ namespace rlib {
             else
             {
                 if(++pos == args.cend())
-                    throw std::invalid_argument(fstr("Argument '%s' must provide value.", argName.c_str()));
+                    throw std::invalid_argument(format_string("Argument '{}' must provide value.", argName));
                 return *pos;
             }
         }
@@ -75,7 +75,7 @@ namespace rlib {
             
             std::string value = valueL.empty() ? valueS : valueL;
             if(required && value.empty())
-                throw std::invalid_argument(fstr("Required argument '%s/%s' not provided.", longName.c_str(), shortName.c_str()));
+                throw std::invalid_argument(format_string("Required argument '{}/{}' not provided.", longName, shortName));
             return value;
         }
 

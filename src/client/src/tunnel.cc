@@ -42,7 +42,7 @@ fd tunnel::newConnection() const
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     auto _ = getaddrinfo(serverIp.c_str(), std::to_string(serverPort).c_str(), &hints, &paddr);
-    if(_ != 0) sysdie("getaddrinfo failed. Check network connection to %s:%d; returnval=%d, check `man getaddrinfo`'s return value.", serverIp.c_str(), serverPort, _);
+    if(_ != 0) sysdie("getaddrinfo failed. Check network connection to {}:{}; returnval={}, check `man getaddrinfo`'s return value.", serverIp.c_str(), serverPort, _);
     defer([p=paddr]{freeaddrinfo(p);});
 
     bool success = false;
@@ -73,7 +73,7 @@ fd tunnel::newConnection() const
     WSADATA wsaData;
     SOCKET sockfd = INVALID_SOCKET;
     int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if (iResult != 0) sysdie("WSAStartup failed with error: %d\n", iResult);
+    if (iResult != 0) sysdie("WSAStartup failed with error: {}\n", iResult);
  
     addrinfo *paddr;
     addrinfo hints { 0 };
@@ -84,7 +84,7 @@ fd tunnel::newConnection() const
     auto _ = getaddrinfo(serverIp.c_str(), std::to_string(serverPort).c_str(), &hints, &paddr);
     if(_ != 0) {
         WSACleanup();
-        sysdie("getaddrinfo failed. Check network connection to %s:%d; returnval=%d, check `man getaddrinfo`'s return value.", serverIp.c_str(), serverPort, _); 
+        sysdie("getaddrinfo failed. Check network connection to {}:{}; returnval={}, check `man getaddrinfo`'s return value.", serverIp.c_str(), serverPort, _); 
     }
     defer([p=paddr]{WSACleanup();freeaddrinfo(p);});
 

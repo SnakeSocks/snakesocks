@@ -5,9 +5,13 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_definitions(-DCOMPILE_SS_MAIN_CLIENT)
 add_definitions(-D___NO_THREAD_POOL)
+add_definitions(-DSKCLI_VERSION=1.3.0-2)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -DMALLOC_CHECK_=2")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
+string(TIMESTAMP _COMPILE_TIME %Y-%m-%dT%H:%M:%SZ UTC)
+add_definitions(-DCOMPILE_TIME=${_COMPILE_TIME})
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -27,6 +31,8 @@ find_package(Boost REQUIRED system)
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(CLIENT_SRC src/client.cc src/socks5.cc src/tunnel.cc src/module.cc src/lib/NetLib.cc)
+set(CLIENT_SRC ${CLIENT_SRC} src/lib/rlib/libr.cc) # Trick to avoid static lib linking...
+
 add_executable(skcli ${CLIENT_SRC})
 target_link_libraries(skcli Threads::Threads)
 target_link_libraries(skcli Boost::system)

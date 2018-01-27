@@ -8,7 +8,7 @@
 
 #include <string>
 #include <rlib/sys/sio.hpp>
-#include <rlib/noncopyable.hpp>
+#include <rlib/class_decorator.hpp>
 
 using std::string;
 

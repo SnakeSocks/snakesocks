@@ -14,13 +14,13 @@ scope_fail += [](){ rollback2(); };
 scope_fail.dismiss();
 */
 
-//TODO: Undone.
 #ifndef R_SCOPE_GUARD_BUFFER_HPP
 #define R_SCOPE_GUARD_BUFFER_HPP
 
+#include <rlib/require/cxx11>
 #include <functional>
 #include <deque>
-#include "noncopyable.hpp"
+#include <rlib/class_decorator.hpp>
 
 namespace rlib {
     class scope_guards : public std::deque<std::function<void()>>, private noncopyable
@@ -38,10 +38,6 @@ namespace rlib {
         void dismiss() noexcept {
             clear();
         }
-    
-        scope_guards() = default;
-        scope_guards(const scope_guards&) = delete;
-        void operator = (const scope_guards&) = delete;
     };
 }
 

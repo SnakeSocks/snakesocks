@@ -42,27 +42,27 @@ void client_module::loadSo(const string &filePath)
     using namespace ____trick;
     void *handle = dlopen(filePath.c_str(), RTLD_LAZY);
     char *errstr = NULL;
-    if(!handle) sysdie("dlopen failed to open shared object %s, dlerror=%s", filePath.c_str(), dlerror());
+    if(!handle) sysdie("dlopen failed to open shared object {}, dlerror={}", filePath.c_str(), dlerror());
     dlerror();
 
     auto _pf_client_make_auth_query = (_pf_client_make_auth_query_t)dlsym(handle, "client_make_auth_query");
-    if ((errstr = dlerror()) != NULL) sysdie("find symbol client_make_auth_query from %s failed. dlerror=%s", filePath.c_str(), dlerror());
+    if ((errstr = dlerror()) != NULL) sysdie("find symbol client_make_auth_query from {} failed. dlerror={}", filePath.c_str(), dlerror());
     _f_client_make_auth_query = _pf_client_make_auth_query;
 
     auto _pf_client_deal_auth_reply = (_pf_client_deal_auth_reply_t)dlsym(handle, "client_deal_auth_reply");
-    if ((errstr = dlerror()) != NULL) sysdie("find symbol client_deal_auth_reply from %s failed. dlerror=%s", filePath.c_str(), dlerror());
+    if ((errstr = dlerror()) != NULL) sysdie("find symbol client_deal_auth_reply from {} failed. dlerror={}", filePath.c_str(), dlerror());
     _f_client_deal_auth_reply = _pf_client_deal_auth_reply;
 
     auto _pf_client_encode = (_pf_client_encode_t)dlsym(handle, "client_encode");
-    if ((errstr = dlerror()) != NULL) sysdie("find symbol client_encode from %s failed. dlerror=%s", filePath.c_str(), dlerror());
+    if ((errstr = dlerror()) != NULL) sysdie("find symbol client_encode from {} failed. dlerror={}", filePath.c_str(), dlerror());
     _f_client_encode = _pf_client_encode;
 
     auto _pf_client_decode = (_pf_client_decode_t)dlsym(handle, "client_decode");
-    if ((errstr = dlerror()) != NULL) sysdie("find symbol client_decode from %s failed. dlerror=%s", filePath.c_str(), dlerror());
+    if ((errstr = dlerror()) != NULL) sysdie("find symbol client_decode from {} failed. dlerror={}", filePath.c_str(), dlerror());
     _f_client_decode = _pf_client_decode;
     
     auto _pf_client_connection_close = (_pf_client_connection_close_t)dlsym(handle, "client_connection_close");
-    if ((errstr = dlerror()) != NULL) sysdie("find symbol client_connection_close from %s failed. dlerror=%s", filePath.c_str(), dlerror());
+    if ((errstr = dlerror()) != NULL) sysdie("find symbol client_connection_close from {} failed. dlerror={}", filePath.c_str(), dlerror());
     _f_client_connection_close = _pf_client_connection_close;
 
     so_handle = handle; //Here is master thread. sysdie will exit program and linux will close this handle on error automatically.
@@ -76,26 +76,26 @@ void client_module::loadSo(const string &filePath)
 {
     using namespace ____trick;
     HMODULE handle = LoadLibrary(filePath.c_str());
-    if(!handle) sysdie("Failed to open dll dylib %s, LastError=%d. Confirm if it exists and you have access to it.", filePath.c_str(), GetLastError());
+    if(!handle) sysdie("Failed to open dll dylib {}, LastError={}. Confirm if it exists and you have access to it.", filePath.c_str(), GetLastError());
 
     auto _pf_client_make_auth_query = (_pf_client_make_auth_query_t)GetProcAddress(handle, "client_make_auth_query");
-    if (_pf_client_make_auth_query == NULL) sysdie("find symbol client_make_auth_query from %s failed. LastError=%d", filePath.c_str(), GetLastError());
+    if (_pf_client_make_auth_query == NULL) sysdie("find symbol client_make_auth_query from {} failed. LastError={}", filePath.c_str(), GetLastError());
     _f_client_make_auth_query = _pf_client_make_auth_query;
 
     auto _pf_client_deal_auth_reply = (_pf_client_deal_auth_reply_t)GetProcAddress(handle, "client_deal_auth_reply");
-    if (_pf_client_deal_auth_reply == NULL) sysdie("find symbol client_deal_auth_reply from %s failed. LastError=%d", filePath.c_str(), GetLastError());
+    if (_pf_client_deal_auth_reply == NULL) sysdie("find symbol client_deal_auth_reply from {} failed. LastError={}", filePath.c_str(), GetLastError());
     _f_client_deal_auth_reply = _pf_client_deal_auth_reply;
 
     auto _pf_client_encode = (_pf_client_encode_t)GetProcAddress(handle, "client_encode");
-    if (_pf_client_encode == NULL) sysdie("find symbol client_encode from %s failed. LastError=%d", filePath.c_str(), GetLastError());
+    if (_pf_client_encode == NULL) sysdie("find symbol client_encode from {} failed. LastError={}", filePath.c_str(), GetLastError());
     _f_client_encode = _pf_client_encode;
 
     auto _pf_client_decode = (_pf_client_decode_t)GetProcAddress(handle, "client_decode");
-    if (_pf_client_decode == NULL) sysdie("find symbol client_decode from %s failed. LastError=%d", filePath.c_str(), GetLastError());
+    if (_pf_client_decode == NULL) sysdie("find symbol client_decode from {} failed. LastError={}", filePath.c_str(), GetLastError());
     _f_client_decode = _pf_client_decode;
 
     auto _pf_client_connection_close = (_pf_client_connection_close_t)GetProcAddress(handle, "client_connection_close");
-    if (_pf_client_connection_close == NULL) sysdie("find symbol client_connection_close from %s failed. LastError=%d", filePath.c_str(), GetLastError());
+    if (_pf_client_connection_close == NULL) sysdie("find symbol client_connection_close from {} failed. LastError={}", filePath.c_str(), GetLastError());
     _f_client_connection_close = _pf_client_connection_close;
 
     so_handle = handle; //Here is master thread. sysdie will exit program and windows will free this handle on error automatically.

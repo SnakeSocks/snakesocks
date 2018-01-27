@@ -4,7 +4,8 @@
 #include "syserr.hpp"
 
 #include <rlib/opt.hpp>
-#include <rlib/print.hpp>
+#include <rlib/stdio.hpp>
+#include <rlib/macro.hpp>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -30,11 +31,21 @@ void display_usage()
 {
 #define n "\n"
     print(
-#ifdef WIN32
-            "SnakeSocks Client 1.3.0 Windows Edition" n n
-#else
-            "SnakeSocks Client 1.3.0" n n
+            "SnakeSocks client"
+#ifdef SKCLI_VERSION
+            " " MACRO_TO_CSTR(SKCLI_VERSION)
 #endif
+#ifdef WIN32
+            " Windows Edition"
+#endif
+            n
+
+#ifdef COMPILE_TIME
+#define COMPILE_TIME_STR MACRO_TO_CSTR(COMPILE_TIME)
+            "Compiled at UTC " COMPILE_TIME_STR n
+#endif
+
+            n
             "Usage: snakesockscli [OPTION...]" n
             "A extensible proxy which supports module-defined protocol behavior." n
             "You can install and run module easily from configuration file," n
@@ -127,10 +138,10 @@ int ____main(int arglen, char **argv)
 
         //redirect stdout/stderr to file
         int out = open(logFile, O_RDWR|O_CREAT|O_APPEND, 0600);
-        if (-1 == out) { sysdie("Failed to open log file %s", logFile); }
+        if (-1 == out) { sysdie("Failed to open log file {}", logFile); }
 
         int err = open(logFile, O_RDWR|O_CREAT|O_APPEND, 0600);
-        if (-1 == err) { sysdie("Failed to open log file %s", logFile); }
+        if (-1 == err) { sysdie("Failed to open log file {}", logFile); }
 
         int save_out = dup(fileno(stdout));
         int save_err = dup(fileno(stderr));

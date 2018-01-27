@@ -5,7 +5,7 @@
 
 #include <string>
 #include <algorithm>
-#include <rlib/noncopyable.hpp>
+#include <rlib/class_decorator.hpp>
 #include "connection.hpp"
 using std::string;
 

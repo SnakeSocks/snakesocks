@@ -30,24 +30,32 @@
 // Define __COMPILER_ID__ and __COMPILER_VER__
 
 #if __cplusplus >= 201103L
-
-class OSInfo
-{
-public:
-    enum class os_t {UNKNOWN, WINDOWS, LINUX, MACOS, BSD, IOS, ANDROID, UNKNOWN_UNIX};
-    enum class compiler_t {UNKNOWN, GCC, CLANG, MSVC, INTELC, BORLAND, IARC, SOLARIS, ZAPCC}; //Compiler which not supports cxx1x yet is not listed here. 201708.
-#if defined(__OS_ID__)
-    static constexpr os_t os = os_t::__OS_ID__;
-#endif
-#if defined(__COMPILER_ID__)
-    static constexpr compiler_t compiler = compiler_t::__COMPILER_ID__;
-#endif
-#if defined(__COMPILER_VER__)
-    static constexpr auto compiler_version = __COMPILER_VER__;
-#else
-    static constexpr auto compiler_version = 0;
-#endif
-};
+namespace rlib {
+    class OSInfo
+    {
+    public:
+        enum class os_t {UNKNOWN, WINDOWS, LINUX, MACOS, BSD, IOS, ANDROID, UNKNOWN_UNIX};
+        enum class compiler_t {UNKNOWN, GCC, CLANG, MSVC, INTELC, BORLAND, IARC, SOLARIS, ZAPCC}; //Compiler which not supports cxx1x yet is not listed here. 201708.
+        static constexpr os_t os = 
+    #if defined(__OS_ID__)
+    os_t::__OS_ID__;
+    #else
+    os_t::UNKNOWN;
+    #endif
+        static constexpr compiler_t compiler = 
+    #if defined(__COMPILER_ID__)
+    compiler_t::__COMPILER_ID__;
+    #else
+    compiler_t::UNKNOWN;
+    #endif
+        static constexpr auto compiler_version = 
+    #if defined(__COMPILER_VER__)
+    __COMPILER_VER__;
+    #else
+    0;
+    #endif
+    };
+}
 
 #endif
 

@@ -1,8 +1,8 @@
 #ifndef R_SWLOCK_HPP
 #define R_SWLOCK_HPP
 
+#include <pthread.h>
 namespace rlib {    
-    #include <pthread.h>
     class RWLock
     {
     public:

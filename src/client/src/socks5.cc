@@ -50,7 +50,7 @@ void Socks5Server::dealConnection(fd connfd) {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;    /* For wildcard IP address */
     auto _ = getaddrinfo(bindIp.c_str(), std::to_string(bindPort).c_str(), &hints, &psaddr);
-    if (_ != 0) sysdie("Failed to getaddrinfo. returnval=%d, check `man getaddrinfo`'s return value.", _);
+    if (_ != 0) sysdie("Failed to getaddrinfo. returnval={}, check `man getaddrinfo`'s return value.", _);
 
     bool success = false;
     for (addrinfo *rp = psaddr; rp != NULL; rp = rp->ai_next)
@@ -102,7 +102,7 @@ void Socks5Server::dealConnection(fd connfd) {
     WSADATA wsaData;
     SOCKET listenfd = INVALID_SOCKET;
     int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if (iResult != 0) sysdie("WSAStartup failed with error: %d\n", iResult);
+    if (iResult != 0) sysdie("WSAStartup failed with error: {}\n", iResult);
 
     addrinfo *psaddr;
     addrinfo hints { 0 };
@@ -113,7 +113,7 @@ void Socks5Server::dealConnection(fd connfd) {
     auto _ = getaddrinfo(bindIp.c_str(), std::to_string(bindPort).c_str(), &hints, &psaddr);
     if(_ != 0) {
         WSACleanup();
-        sysdie("Failed to getaddrinfo. returnval=%d, check `man getaddrinfo`'s return value.", _);
+        sysdie("Failed to getaddrinfo. returnval={}, check `man getaddrinfo`'s return value.", _);
     }
 
     bool success = false;

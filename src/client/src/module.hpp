@@ -3,7 +3,7 @@
 
 #include <string>
 #include <functional>
-#include <rlib/noncopyable.hpp>
+#include <rlib/class_decorator.hpp>
 #include "debug.hpp"
 #include "module-port.hpp"
 

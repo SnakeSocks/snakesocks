@@ -10,7 +10,7 @@
 
 #include <functional>
 #include <list>
-#include <rlib/noncopyable.hpp>
+#include <rlib/class_decorator.hpp>
 #include <thread>
 #include <mutex>
 #ifdef WIN32

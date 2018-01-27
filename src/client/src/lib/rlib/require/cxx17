@@ -1,8 +1,6 @@
 #ifndef R_CXX17_REQUIRED
 #define R_CXX17_REQUIRED
 
-#if __cplusplus < 201707L
-#error C++17 is required.
-#endif
+#include <bits/c++17_warning.h>
 
 #endif
