@@ -16,6 +16,20 @@ glibc 2.14
 
 C++14 support and C++ Boost Library (client), Golang (server)
 
+- Setup your compilation environment quickly
+
+```sh
+# Ubuntu/Debian
+sudo apt-get install gcc g++ gccgo-go libboost-system-dev cmake make git
+# CentOS/RedHat > Tip: edit software version number if they've been updated.
+sudo yum install go make boost148-devel boost148-static git centos-release-scl && sudo yum install devtoolset-7-gcc-c++ # Tip: you can provide gcc7 in other way if you prefer.
+sudo ln -s /usr/include/boost148/boost /usr/include/boost && sudo ln -s /usr/lib64/boost148/libboost_system.a /usr/lib/libboost_system.a # So that cmake can find boost.
+curl https://cmake.org/files/v3.10/cmake-3.10.2-Linux-x86_64.tar.gz | tar -xvzf - && export PATH=$PATH:$(pwd)/cmake-3.10.2-Linux-x86_64/bin/ # cmake in yum repo is too old.
+export SKCLI_CC=/opt/rh/devtoolset-7/root/usr/bin/cc && export SKCLI_CXX=/opt/rh/devtoolset-7/root/usr/bin/c++ # Providing gcc6/7/8 here is OK.
+# ArchLinux
+sudo pacman -S gcc go boost cmake make git
+```
+
 ## Install from release
 
 Download and unpack snakesocks from [here](https://github.com/snakesocks/snakesocks/releases), then run `./install.sh client/server`.

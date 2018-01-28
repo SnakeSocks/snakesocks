@@ -1,15 +1,23 @@
 nofakeroot_prefix=/etc/snakesocks
 prefix=$$pkgdir$(nofakeroot_prefix)
 
-
 def:
 	echo 'Usage: "make server" or "make client" or "make default_modules"' && exit 1
+
+cmake_extra_arg :=
+check_cc_env:
+ifdef SKCLI_CC
+cmake_extra_arg += -DCMAKE_C_COMPILER=$(SKCLI_CC)
+endif
+ifdef SKCLI_CXX
+cmake_extra_arg += -DCMAKE_CXX_COMPILER=$(SKCLI_CXX)
+endif
 
 server:
 	cd src/server && $(MAKE) skserver && cd -
 
-client:
-	cd src/client && cmake . -DCMAKE_BUILD_TYPE=Release && $(MAKE) && cd -
+client: check_cc_env
+	cd src/client && cmake . -DCMAKE_BUILD_TYPE=Release $(cmake_extra_arg) && $(MAKE) && cd -
 
 default_modules:
 	cd src/modules && make simple_proxy && make se_proxy && cd -

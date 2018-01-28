@@ -55,6 +55,8 @@ typedef struct _client_query {
  * For `client_encode` and `client_decode`:
  * You can either malloc/calloc a new binary_safe_string to return and free `data`, or edit `data` and return it.
  * I'll free returned string only once, and never free `data` passed to client_(en/de)code.
+ * 
+ * NOTICE: ALL FUNCTIONS BELOW MUST BE THREAD-SAFE!
  */
 binary_safe_string client_make_auth_query(connect_info *);
 bool client_deal_auth_reply(connect_info *, binary_safe_string server_reply); //Return true if auth is ok.
