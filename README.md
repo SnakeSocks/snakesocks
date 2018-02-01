@@ -1,10 +1,12 @@
 # SnakeSocks [![Build Status](https://travis-ci.org/SnakeSocks/snakesocks.svg?branch=master)](https://travis-ci.org/SnakeSocks/snakesocks)
 
-SnakeSocks is a useful proxy for exchanges network packets between a client and server through firewall or other things. 
+SnakeSocks is a fast tunnel proxy to make accessing Internet through firewall more secure.
 
-Due to our test, it may have less latency but smaller bandwidth compared with sha*owsocks.
+You can write your own module to make your packets "seems" like anything.
 
-Tip: 'client' is 'client for linux/unix' if there's no special instructions.
+Due to our test, it may have less latency but smaller bandwidth than sha*owsocks.
+
+Tip: 'client' is 'client for linux/unix' if not specially instructed.
 
 ## Dependencies
 
@@ -15,6 +17,14 @@ glibc 2.14
 - Compilation
 
 C++14 support and C++ Boost Library (client), Golang (server)
+
+## Install from release
+
+Download and unpack snakesocks from [here](https://github.com/snakesocks/snakesocks/releases), then run `./install.sh client/server`.
+
+Client for windows will be released together with snakesocks-windows-gui, at [here](https://github.com/snakesocks/snakesocks-windows).
+
+## Build from source
 
 - Setup your compilation environment quickly
 
@@ -30,15 +40,7 @@ export SKCLI_CC=/opt/rh/devtoolset-7/root/usr/bin/cc && export SKCLI_CXX=/opt/rh
 sudo pacman -S gcc go boost cmake make git
 ```
 
-## Install from release
-
-Download and unpack snakesocks from [here](https://github.com/snakesocks/snakesocks/releases), then run `./install.sh client/server`.
-
-Client for windows will be released together with snakesocks-windows-gui, at [here](https://github.com/snakesocks/snakesocks-windows).
-
-## Build from source
-
-- client
+- Build client
 
 ```sh
 git clone https://github.com/snakesocks/snakesocks.git
@@ -49,7 +51,7 @@ sudo make install
 skcli -h
 ```
 
-- server
+- Build server
 
 ```sh
 git clone https://github.com/snakesocks/snakesocks.git
@@ -60,7 +62,7 @@ sudo make install
 sksrv -h
 ```
 
-- client for windows (mingw)
+- Client for windows (mingw)
 
 Refer to [here](https://github.com/snakesocks/snakesocks-windows) please.
 
