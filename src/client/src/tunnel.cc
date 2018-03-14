@@ -1,15 +1,32 @@
 #include "tunnel.hpp"
 #include "syserr.hpp"
 #include <rlib/sys/sio.hpp>
-#include <rlib/scope_guard.hpp>
 #include "NetLib.hpp"
 
+//Import lib with polluting macro at last.. (macro defer)
+#include <rlib/scope_guard.hpp>
+
 using namespace rlib;
+using namespace std::chrono_literals;
 
 void tunnel::initCString()
 {
     //Resolve domain.
-    auto servAddr = BoostNetLib::resolveDomainOnce(serverIp);
+    boost::asio::ip::address servAddr;
+    while(true) {
+        try {
+            servAddr = BoostNetLib::resolveDomainOnce(serverIp);
+            break;
+        }
+        catch(boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::system::system_error> >) {
+            LOG(1) << "Error: can not resolve domain " << servAddr << std::endl;
+            if(nx_retry)
+                std::this_thread::sleep_for(15s);
+            else
+                throw;
+        }
+    }
+
     if(servAddr.is_v4()) {
         auto _conv_serverIp = servAddr.to_v4().to_bytes();
         memcpy(conv_serverIp, _conv_serverIp.data(), 4);

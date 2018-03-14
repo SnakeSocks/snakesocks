@@ -2,7 +2,7 @@
 
 #include "syserr.hpp"
 #include <rlib/sys/sio.hpp>
-#include <rlib/scope_guard.hpp>
+#include <boost/asio.hpp>
 #include "NetLib.hpp"
 #include "threadPool.hpp"
 #include "connection.hpp"
@@ -14,7 +14,8 @@
 #include <csignal>
 #include <cstdlib>
 
-//#include <boost/asio.hpp>
+//Import lib with polluting macro at last.. (macro defer)
+#include <rlib/scope_guard.hpp>
 
 using std::string;
 
@@ -162,7 +163,7 @@ auto Socks5Connection::unpackConnectionPacket(const char *pkgStr)
     char ATYP = pkgStr[3];
     addr_info remoteInfo;
     uint16_t targetPort = 0;
-    //DO NOT delete these comment below PLEASE!!!!!!
+    //DO NOT delete these comments below PLEASE!!!!!!
     if (ATYP == 1)
     {
         //memcpy(remoteInfo.destination_ip, pkgStr + 4, 4);
@@ -263,19 +264,6 @@ Socks5Connection::addr_info Socks5Connection::connect_pkgs()
     return remoteInfo;
 }
 
-#define max(a, b) ((a)>(b)?(a):(b))
-
-/*
-#include <chrono>
-#include <iomanip>
-void printTime()
-{
-    auto now = std::chrono::system_clock::now();
-    auto now_c = std::chrono::system_clock::to_time_t(now);
-    std::cout << std::put_time(std::localtime(&now_c), "%c") << std::endl;
-}
-*/
-
 Socks5Connection::addr_info Socks5Connection::dns_pkgs(SnakeConnection &nextHop, addr_info &rawAddr)
 {
     if(rawAddr.type != addr_info::addr_t::domain)
@@ -316,7 +304,7 @@ void Socks5Connection::passData(SnakeConnection &nextHop, const addr_info &resol
     {
         FD_SET(m_fd, &rset);
         FD_SET(nextHop.GetConnFd(), &rset);
-        if (-1 == select(max(m_fd, nextHop.GetConnFd()) + 1, &rset, NULL, NULL, NULL))
+        if (-1 == select(std::max(m_fd, nextHop.GetConnFd()) + 1, &rset, NULL, NULL, NULL))
             sysdie("Select failed");
         if (FD_ISSET(m_fd, &rset))
         {

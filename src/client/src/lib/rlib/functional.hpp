@@ -8,6 +8,7 @@
 #include <list>
 #include <functional>
 #include <chrono>
+#include <string>
 
 namespace rlib {
     template <class operation_t, typename... args_t>
@@ -33,6 +34,13 @@ namespace rlib {
         for(size_t cter = 0; cter < count; ++cter)
             ret.push_back(std::move(f(args ...)));
         return std::move(ret);
+    }
+
+    static inline std::string current_time()
+    {
+        auto now = std::chrono::system_clock::now();
+        auto now_c = std::chrono::system_clock::to_time_t(now);
+        return std::move(std::put_time(std::localtime(&now_c), "%c"));
     }
 }
 #endif

@@ -22,7 +22,7 @@ int main_proc(config &conf)
     _runtime_debugLevel = conf.debugLevel;
     println("Setting debug level = ", _runtime_debugLevel);
     client_module mod(conf.modulePath);
-    Socks5Server sss(conf.bindIp, conf.bindPort, tunnel(conf.serverIp, conf.serverPort, conf.passphrase, std::move(mod)));
+    Socks5Server sss(conf.bindIp, conf.bindPort, tunnel(conf.serverIp, conf.serverPort, conf.passphrase, std::move(mod), conf.retryResolve));
     sss.listen();
     return 0;
 }
@@ -33,7 +33,7 @@ void display_usage()
     print(
             "SnakeSocks client"
 #ifdef SKCLI_VERSION
-            " " MACRO_TO_CSTR(SKCLI_VERSION)
+            " " RLIB_MACRO_TO_CSTR(SKCLI_VERSION)
 #endif
 #ifdef WIN32
             " Windows Edition"
@@ -41,7 +41,7 @@ void display_usage()
             n
 
 #ifdef COMPILE_TIME
-#define COMPILE_TIME_STR MACRO_TO_CSTR(COMPILE_TIME)
+#define COMPILE_TIME_STR RLIB_MACRO_TO_CSTR(COMPILE_TIME)
             "Compiled at UTC " COMPILE_TIME_STR n
 #endif
 
@@ -51,24 +51,25 @@ void display_usage()
             "You can install and run module easily from configuration file," n
             "to determine how packets are encrypted, transmitted, etc." n n
             "Options:" n
-            "-s --server <server address>\tServer ip or domain" n
-            "-p --server-port <server port>\tServer listening port" n
-            "-k --passphrase <passphrase>\tPassphrase" n
-            "-L --listen <listen address>\tLocal address that socks5 server listens on" n
-            "-P --listen-port <listen port>\tLocal port that socks5 server listens on" n
-            "-D --debug <debug level>\tDebug level to set" n
-            "-m --mod <path to module>\tModule path" n
+            "-s --server <server address>    Server ip or domain" n
+            "-p --server-port <server port>  Server listening port" n
+            "-k --passphrase <passphrase>    Passphrase" n
+            "-L --listen <listen address>    Local address that socks5 server listens on" n
+            "-P --listen-port <listen port>  Local port that socks5 server listens on" n
+            "-D --debug <debug level>        Debug level to set (1/2/3/4)" n
+            "-m --mod <path to module>       Module path" n
+            "   --retry                      Retry infinitely if a domain cannot be resolved"
             n
 #ifdef WIN32
-            "-c --conf <config file path>\tPath to config file(default: conf\\client.conf)" n
-            "                            \t    Use '-c NULL' to prevent me from looking for client.conf" n
+            "-c --conf <config file path>    Path to config file(default: conf\\client.conf)" n
+            "                                    Use '-c NULL' to prevent me from looking for client.conf" n
 #else
-            "-c --conf <config file path>\tPath to config file(default: /etc/snakesocks/conf/client.conf)" n
-            "                            \t    Use '-c NULL' to prevent me from looking for client.conf" n
-            "-d --daemon\tRun client as daemon" n
-            "-l --daemon-log <log file name>\tLog file for daemon mode(default: /var/log/skcli.log)" n
+            "-c --conf <config file path>    Path to config file(default: /etc/snakesocks/conf/client.conf)" n
+            "                                    Use '-c NULL' to prevent me from looking for client.conf" n
+            "-d --daemon                     Run client as daemon" n
+            "-l --daemon-log <log file name> Log file for daemon mode(default: /var/log/skcli.log)" n
 #endif
-            "-h --help\tShow this message" n n
+            "-h --help                       Show this message" n n
             "Published on GNU license V2." n
     );
 #undef n
@@ -84,7 +85,8 @@ int ____main(int arglen, char **argv)
         return 0;
     }
 
-    bool dflag = args.getBoolArg("--daemon", "-d");
+    bool asDaemon = args.getBoolArg("--daemon", "-d");
+    bool retryResolve = args.getBoolArg("--retry");
     string confPath = args.getValueArg("--conf", "-c");
     string daemonLogFilePath = args.getValueArg("--daemon-log", "-l");
     string serverAddr = args.getValueArg("--server", "-s");
@@ -129,7 +131,9 @@ int ____main(int arglen, char **argv)
         if(!modPath.empty()) conf.modulePath = modPath;
     }
 
-    if(dflag)
+    if(retryResolve) conf.retryResolve = true;
+
+    if(asDaemon)
     {
 #ifdef WIN32 
         die("Daemon mode is not supported on Windows.");

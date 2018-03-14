@@ -1,3 +1,0 @@
-# rlib
-
-Here is r\*\*\*'s private library...

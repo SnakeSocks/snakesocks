@@ -19,8 +19,8 @@ class tunnel : private rlib::noncopyable
 {
 public:
     tunnel() = delete;
-    tunnel(const string &ip, uint16_t port, const string &psFromCfg, client_module &&cmod)
-            : serverIp(ip), serverPort(port), passphrase(psFromCfg) ,mod(std::move(cmod)) {initCString();}
+    tunnel(const string &ip, uint16_t port, const string &psFromCfg, client_module &&cmod, bool nx_retry)
+            : serverIp(ip), serverPort(port), passphrase(psFromCfg), mod(std::move(cmod)), nx_retry(nx_retry) {initCString();}
     tunnel(tunnel &&ano)
             : mod(std::move(ano.mod)), serverIp(std::move(ano.serverIp)),
               passphrase(std::move(ano.passphrase)), serverPort(ano.serverPort) {initCString();}
@@ -33,6 +33,8 @@ public:
     string serverIp;
     uint16_t serverPort;
     string passphrase;
+    bool nx_retry;
+
     uint8_t conv_serverIp[16] = { 0 };
     binary_safe_string conv_passphrase;
 private:

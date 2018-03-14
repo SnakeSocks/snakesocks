@@ -20,14 +20,14 @@ with open("cc_list") as fd:
         iarr=i.split(' ')
         if len(iarr) < 2:
             continue
-        print('#ifndef __COMPILER_ID__')
+        print('#ifndef RLIB_COMPILER_ID')
         print(genDefList(iarr[:-1:]))
-        print('#define __COMPILER_ID__', iarr[-1])
+        print('#define RLIB_COMPILER_ID', iarr[-1])
         print('#endif')
         print('#endif')
         print('')
 
-print('#ifndef __COMPILER_ID__')
-print('#define __COMPILER_ID__ UNKNOWN')
+print('#ifndef RLIB_COMPILER_ID')
+print('#define RLIB_COMPILER_ID UNKNOWN')
 print('#endif')
 

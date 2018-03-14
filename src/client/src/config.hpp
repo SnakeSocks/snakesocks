@@ -5,7 +5,7 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <string>
 #include <exception>
-#include "NetLib.hpp"
+
 namespace pt = boost::property_tree;
 using std::string;
 
@@ -20,6 +20,7 @@ public:
     uint16_t bindPort;
 
     string modulePath;
+    bool retryResolve;
     int debugLevel;
     string daemonLogFile;
     //http://www.boost.org/doc/libs/1_64_0/libs/property_tree/examples/debug_settings.cpp
@@ -33,6 +34,7 @@ public:
         bindIp = tree.get<string>("socks5.ip");
         bindPort = tree.get<uint16_t>("socks5.port");
         modulePath = tree.get<string>("core.module");
+        retryResolve = tree.get<string>("core.nx_retry") == "true";
         debugLevel = tree.get("core.debugLevel", 1);
         daemonLogFile = tree.get("core.daemonLogFile", std::string("/var/log/skcli.log"));
     }
@@ -45,6 +47,7 @@ public:
         tree.put("socks5.ip", bindIp);
         tree.put("socks5.port", bindPort);
         tree.put("core.module", modulePath);
+        tree.put("core.nx_retry", retryResolve ? "true" : "false");
         tree.put("core.debugLevel", debugLevel);
         tree.put("core.daemonLogFile", daemonLogFile);
         pt::write_ini(confPath, tree);

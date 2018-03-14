@@ -91,7 +91,6 @@ string NetLib::printData(void *bytes, size_t len)
 
 
 #include <boost/asio.hpp>
-using namespace boost;
 
 boost::asio::ip::address BoostNetLib::resolveDomainOnce(const string &domain) {
     return resolveDomainOnce(domain, [](const boost::asio::ip::address &)->bool {return true;});
