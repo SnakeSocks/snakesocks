@@ -15,7 +15,7 @@ var Passphrase string
 
 func initConfig() error {
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "SnakeSocks Server 1.3\n\n")
+		fmt.Fprintf(os.Stderr, "SnakeSocks Server 1.3.1\n\n")
 		flag.PrintDefaults()
 		fmt.Fprintf(os.Stderr, "\nPublished on GNU license V2.\n")
 	}

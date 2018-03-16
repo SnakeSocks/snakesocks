@@ -75,7 +75,6 @@ func (d *Dispatcher) dispatch() {
 		case job := <-JobQueue:
 			go func(job Job) {
 				jobChannel := <-d.WorkerPool
-
 				jobChannel <- job
 			}(job)
 		}
