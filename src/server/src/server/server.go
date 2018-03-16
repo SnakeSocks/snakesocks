@@ -55,12 +55,17 @@ func (s *Server) Start() {
 	if err != nil {
 		PPrintf(err)
 	}
+	dispatcher := NewDispatcher()
+	dispatcher.Run(s)
+	maxq, _ := strconv.Atoi(MaxQueue)
+	JobQueue = make(chan Job, maxq)
 	for {
 		c, err := s.l.Accept()
 		if err != nil {
 			EPrintf("%v", err)
 		}
-		go s.handle(c)
+		work := Job{Payload: c}
+		JobQueue <- work
 	}
 	closeSo()
 }
