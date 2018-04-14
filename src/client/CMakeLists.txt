@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_definitions(-DCOMPILE_SS_MAIN_CLIENT)
 add_definitions(-D___NO_THREAD_POOL)
-add_definitions(-DSKCLI_VERSION=1.3.0-3)
+add_definitions(-DSKCLI_VERSION=1.3.1)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -DMALLOC_CHECK_=2")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")

@@ -17,7 +17,7 @@ using namespace std;
 using rlib::println;
 using rlib::print;
 
-int main_proc(config &conf)
+int main_proc(config &&conf)
 {
     _runtime_debugLevel = conf.debugLevel;
     println("Setting debug level = ", _runtime_debugLevel);
@@ -75,7 +75,7 @@ void display_usage()
 #undef n
 }
 
-int ____main(int arglen, char **argv)
+int wrapped_main(int arglen, char **argv)
 {
     rlib::opt_parser args(arglen, argv);
 
@@ -157,14 +157,14 @@ int ____main(int arglen, char **argv)
 #endif
     }
 
-    return main_proc(conf);
+    return main_proc(std::move(conf));
 }
 
 int main(int arglen, char **argv)
 {
 #ifdef WIN32
 	//WIN32 cannot deal with exception elegently. catch them!
-	try {____main(arglen, argv);}
+	try { wrapped_main(arglen, argv); }
 	catch (std::exception &e) 
 	{
         println("Uncaught Exception: ", e.what());
@@ -172,6 +172,6 @@ int main(int arglen, char **argv)
 	}
 	return 0;
 #else
-	return ____main(arglen, argv);
+	return wrapped_main(arglen, argv);
 #endif
 }

@@ -47,8 +47,8 @@ public:
         }
         catch(std::exception &e)
         {
-            LOG(2) << "Exception caught from child thread:" << e.what() << std::endl;
-            debug(99) throw;
+            LOG(2) << "Exception caught from child thread: At connection " << m_fd << ':' << e.what() << std::endl;
+            //debug(99) throw;
         }
         LOGF(1)("Socks5: Connection %d closed.\n", m_fd);
     }
