@@ -21,7 +21,7 @@ void tunnel::initCString()
             break;
         }
         catch(boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::system::system_error> >) {
-            LOG(1) << "Error: can not resolve domain " << servAddr << std::endl;
+            rlog.error("Can not resolve domain {}."_format(servAddr));
             if(nx_retry)
                 std::this_thread::sleep_for(15s);
             else
@@ -61,7 +61,7 @@ fd tunnel::newConnection() const
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     auto _ = getaddrinfo(serverIp.c_str(), std::to_string(serverPort).c_str(), &hints, &paddr);
-    if(_ != 0) sysdie("getaddrinfo failed. Check network connection to {}:{}; returnval={}, check `man getaddrinfo`'s return value.", serverIp.c_str(), serverPort, _);
+    if(_ != 0) sysdie("getaddrinfo failed. Check network connection to {}:{}; returnval={}, check `man getaddrinfo`'s return value."_format(serverIp.c_str(), serverPort, _));
     defer([p=paddr]{freeaddrinfo(p);});
 
     bool success = false;
@@ -92,7 +92,7 @@ fd tunnel::newConnection() const
     WSADATA wsaData;
     SOCKET sockfd = INVALID_SOCKET;
     int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if (iResult != 0) sysdie("WSAStartup failed with error: {}\n", iResult);
+    if (iResult != 0) sysdie("WSAStartup failed with error: {}"_format(iResult));
  
     addrinfo *paddr;
     addrinfo hints { 0 };
@@ -103,7 +103,7 @@ fd tunnel::newConnection() const
     auto _ = getaddrinfo(serverIp.c_str(), std::to_string(serverPort).c_str(), &hints, &paddr);
     if(_ != 0) {
         WSACleanup();
-        sysdie("getaddrinfo failed. Check network connection to {}:{}; returnval={}, check `man getaddrinfo`'s return value.", serverIp.c_str(), serverPort, _); 
+        sysdie("getaddrinfo failed. Check network connection to {}:{}; returnval={}, check `man getaddrinfo`'s return value."_format(serverIp.c_str(), serverPort, _));
     }
     defer([p=paddr]{WSACleanup();freeaddrinfo(p);});
 
@@ -132,9 +132,9 @@ bool tunnel::doAuth(connect_info *conn) const
     binary_safe_string authdat = mod.makeAuthQuery(conn);
     defer([&]{std::free(authdat.str);});
     auto lengthBackup = authdat.length;
-    if(lengthBackup > 64 * 1024 * 1024) die("Fatal: memory out of range.");
+    if(lengthBackup > 64 * 1024 * 1024) die("Reply is too long(incorrect)");
     authdat.length = htonl(authdat.length);
-    LOGF(3)("Authdat: length=%u\n", lengthBackup);
+    rlog.debug("Authdat: length={}"_format(lengthBackup));
     fdIO::writen_ex(connfd, &authdat.length, sizeof(authdat.length));
     fdIO::writen_ex(connfd, authdat.str, lengthBackup);
 
@@ -142,7 +142,7 @@ bool tunnel::doAuth(connect_info *conn) const
     fdIO::readn_ex(connfd, &replyLen, 4);
     replyLen = ntohl(replyLen);
 
-    if(replyLen > 64 * 1024 * 1024) die("Fatal: memory out of range. ");
+    if(replyLen > 64 * 1024 * 1024) die("Reply is too long(incorrect)");
     char *rbuf = (char *)malloc(replyLen);
     defer([&]{std::free(rbuf);});
     fdIO::readn_ex(connfd, rbuf, replyLen);

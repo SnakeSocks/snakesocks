@@ -1,5 +1,11 @@
 #!/bin/env python3
 
+rlib_cc_magic = 90713
+def getSerialNumber():
+    global rlib_cc_magic
+    rlib_cc_magic += 1
+    return rlib_cc_magic
+
 def genDefList(idarr):
     s = '#if'
     cter = 1
@@ -22,12 +28,14 @@ with open("cc_list") as fd:
             continue
         print('#ifndef RLIB_COMPILER_ID')
         print(genDefList(iarr[:-1:]))
-        print('#define RLIB_COMPILER_ID', iarr[-1])
+        print('#define RLIB_COMPILER_ID', 'CC_' + iarr[-1])
         print('#endif')
         print('#endif')
+        print('#define CC_' + iarr[-1], getSerialNumber())
         print('')
 
 print('#ifndef RLIB_COMPILER_ID')
-print('#define RLIB_COMPILER_ID UNKNOWN')
+print('#define RLIB_COMPILER_ID CC_UNKNOWN')
 print('#endif')
+print('#define CC_UNKNOWN', getSerialNumber())
 

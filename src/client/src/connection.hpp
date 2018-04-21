@@ -12,7 +12,7 @@
 
 using std::string;
 
-#ifndef WIN32
+#if RLIB_OS_ID != OS_WINDOWS
 using fd=int;
 #else
 #include <winsock2.h>

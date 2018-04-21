@@ -1,23 +1,11 @@
 #ifndef _SOCKSEX_DEBUG_H
 #define _SOCKSEX_DEBUG_H 1
 
-#include <stdio.h>
+#include <rlib/log.hpp>
+#include <rlib/string.hpp>
+using namespace rlib::literals;
 
-extern int _runtime_debugLevel;
-
-#ifdef ___NODEBUG
-#define RECORD
-#define debug_if(sth) if(false)
-#else
-#define RECORD debug(4) printf("R> %s:line%d\n", __FILE__, __LINE__);
-#define debug_if(sth) if(sth)
-#endif
-
-#define debug(level) debug_if(_runtime_debugLevel >= level)
-
-#include <iostream>
-#define LOG(level) debug(level) std::cout
-#define LOGF(level) debug(level) RLIB_DO_PRINTF
-#define RLIB_DO_PRINTF printf
+extern rlib::logger rlog;
+//extern rlib::log_level_t super_debug;
 
 #endif //_SOCKSEX_DEBUG_H

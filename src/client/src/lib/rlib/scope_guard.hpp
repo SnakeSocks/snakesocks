@@ -1,9 +1,7 @@
 /* Exception safe usage:
  *
  * reinforce_scope_begin(_gname, [](){do_sth();})
- * 1+1;
- * 1+1=2;
- * 2+2=4;
+ * do_something();
  * reinforce_scope_end(_gname)
  *
  */
@@ -50,8 +48,52 @@ namespace rlib {
 #define defer(callable) ::rlib::scope_guard RLIB_MAKE_UNIQUE_NAME(_guarder_id_) (callable)
 #endif
 
-#define reinforce_scope_begin(guarderName, callable) scope_guard guarderName = callable; try{
-#define reinforce_scope_end(guarderName) } catch(...) { guarderName.force_call(); throw;}
+#define RLIB_reinforce_scope_begin(guarderName, callable) scope_guard guarderName = callable; try{
+#define RLIB_reinforce_scope_end(guarderName) } catch(...) { guarderName.force_call(); throw;}
+
+/*
+scope_guards scope_exit, scope_fail;
+
+action1();
+scope_exit += []{ cleanup1(); };
+scope_fail += []{ rollback1(); };
+
+action2();
+scope_exit += []{ cleanup2(); };
+scope_fail += []{ rollback2(); };
+
+do_something();
+
+scope_fail.dismiss();
+*/
+
+#include <deque>
+
+namespace rlib {
+    class scope_guards : private noncopyable
+    {
+    public:
+        template<class Callable>
+        scope_guards& operator += (Callable && undo_func) {
+            fbuf.emplace_front(std::forward<Callable>(undo_func));
+        }
+
+        ~scope_guards() {
+            force_call();
+        }
+
+        void dismiss() noexcept {
+            fbuf.clear();
+        }
+
+        void force_call() noexcept {
+            for(auto &f : fbuf) f();
+            dismiss();
+        }
+    private:
+        std::deque<std::function<void(void)> > fbuf;
+    };
+}
 
 
 #endif

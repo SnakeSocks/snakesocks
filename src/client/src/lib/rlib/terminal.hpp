@@ -1,3 +1,10 @@
+/*
+ *
+ * terminal.hpp: unix terminal font/color wrapper for modern c++
+ * MIT License
+ *
+ * */
+
 #ifndef R_STD_COLOR_HPP
 #define R_STD_COLOR_HPP
 
@@ -26,7 +33,7 @@ namespace rlib::terminal {
         fontInfo() = default;
         string toString() const
         {
-            if(rlib::OSInfo::os == rlib::OSInfo::os_t::WINDOWS)
+            if(rlib::os_info::os == rlib::os_info::os_t::WINDOWS)
                 return std::move(std::string());
             else
                 return std::move(clear ? std::string("\033[0m") : (color_to_string() + font_to_string()));

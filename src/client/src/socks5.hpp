@@ -37,6 +37,7 @@ public:
     ~Socks5Connection() {close(m_fd);}
     void launch()
     {
+        rlog.info("Socks5: Connection {} opened."_format(m_fd));
         try
         {
             handshake_pkgs();
@@ -47,10 +48,9 @@ public:
         }
         catch(std::exception &e)
         {
-            LOG(2) << "Exception caught from child thread: At connection " << m_fd << ':' << e.what() << std::endl;
-            //debug(99) throw;
+            rlog.error("Exception caught from child thread: At connection {}:{}."_format(m_fd, e.what()));
         }
-        LOGF(1)("Socks5: Connection %d closed.\n", m_fd);
+        rlog.info("Socks5: Connection {} closed."_format(m_fd));
     }
 
     class addr_info
@@ -78,7 +78,7 @@ public:
 
         void try_6to4() {
             if(type != addr_t::ipv6)
-                throw std::invalid_argument("incorrect type.");
+                die("incorrect type.");
             bool conv_ok = true;
             std::for_each(data.cbegin() + 4, data.cend(), [&conv_ok](char c){if(c!='\0') conv_ok=false;});
             if(conv_ok)
@@ -92,11 +92,11 @@ public:
         {
             //port number must htons(), which's omitted in socks5.cc::unpackConnectionInfo()
             if(type == addr_t::null)
-                throw std::invalid_argument("convert null addr to query template.");
+                die("convert null addr to query template.");
             if(type == addr_t::domain)
-                throw std::invalid_argument("convert addr to query template before resolve its domain.");
+                die("convert addr to query template before resolve its domain.");
             if(port == 0)
-                throw std::invalid_argument("convert addr to query template before assign port number.");
+                die("convert addr to query template before assign port number.");
             client_query cq { {0}, port };
             std::memcpy(cq.destination_ip, data.data(), (type == addr_t::ipv4 ? 4 : 16));
             return std::move(cq);
@@ -108,6 +108,7 @@ public:
             bs.length = 32 + domain.size() + 1;
             bs.str = (char *)malloc(bs.length);
 
+            // TODO: Remove this magic.
             std::memcpy(bs.str, "__m_str_dns_head_32__snakesocks_", 32);
             std::memcpy(bs.str + 32, domain.c_str(), domain.size());
             bs.str[bs.length - 1] = '\0';

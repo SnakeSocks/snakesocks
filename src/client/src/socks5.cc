@@ -16,18 +16,17 @@
 
 //Import lib with polluting macro at last.. (macro defer)
 #include <rlib/scope_guard.hpp>
+#include <rlib/sys/os.hpp>
 
-using std::string;
-
-#ifndef WIN32
-using fd=int;
-#else
+#if RLIB_OS_ID == OS_WINDOWS
 #include <winsock2.h>
 using fd=SOCKET;
+#else
+using fd=int;
 #endif
 
-using namespace rlib;
-
+using rlib::fdIO;
+using rlib::sockIO;
 void std_string_to_bin_safe(const string &src, binary_safe_string &dst)
 {
     dst.length = src.size();
@@ -40,7 +39,7 @@ void Socks5Server::dealConnection(fd connfd) {
     Socks5Connection(*this, connfd).launch();
 }
 
-#ifndef WIN32
+#if RLIB_OS_ID != OS_WINDOWS
 //POSIX impl
 [[noreturn]] void Socks5Server::listen()
 {
@@ -51,7 +50,7 @@ void Socks5Server::dealConnection(fd connfd) {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;    /* For wildcard IP address */
     auto _ = getaddrinfo(bindIp.c_str(), std::to_string(bindPort).c_str(), &hints, &psaddr);
-    if (_ != 0) sysdie("Failed to getaddrinfo. returnval={}, check `man getaddrinfo`'s return value.", _);
+    if (_ != 0) sysdie("Failed to getaddrinfo. returnval={}, check `man getaddrinfo`'s return value."_format(_));
 
     bool success = false;
     for (addrinfo *rp = psaddr; rp != NULL; rp = rp->ai_next)
@@ -67,15 +66,15 @@ void Socks5Server::dealConnection(fd connfd) {
         if (bind(listenfd, rp->ai_addr, rp->ai_addrlen) == 0)
         {
             success = true;
-            break; /* Success */
+            break;
         }
         close(listenfd);
     }
-    if (!success) sysdie("Failed to bind to any of these addr.");
+    if (!success) sysdie("Failed to bind {}:{}."_format(bindIp, bindPort));
 
     if (-1 == ::listen(listenfd, 16)) sysdie("listen failed.");
 
-    LOG(1) << "Listening on " << bindIp << ":" << bindPort << std::endl;
+    rlog.info("Listening on {}:{}"_format(bindIp, bindPort));
 #ifndef ___NO_THREAD_POOL
     ThreadPool pool;
 #endif
@@ -103,7 +102,7 @@ void Socks5Server::dealConnection(fd connfd) {
     WSADATA wsaData;
     SOCKET listenfd = INVALID_SOCKET;
     int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if (iResult != 0) sysdie("WSAStartup failed with error: {}\n", iResult);
+    if (iResult != 0) sysdie("WSAStartup failed with error: {}\n"_format(iResult));
 
     addrinfo *psaddr;
     addrinfo hints { 0 };
@@ -114,7 +113,7 @@ void Socks5Server::dealConnection(fd connfd) {
     auto _ = getaddrinfo(bindIp.c_str(), std::to_string(bindPort).c_str(), &hints, &psaddr);
     if(_ != 0) {
         WSACleanup();
-        sysdie("Failed to getaddrinfo. returnval={}, check `man getaddrinfo`'s return value.", _);
+        sysdie("Failed to getaddrinfo. returnval={}, check `man getaddrinfo`'s return value."_format(_));
     }
 
     bool success = false;
@@ -135,7 +134,7 @@ void Socks5Server::dealConnection(fd connfd) {
 
     if(SOCKET_ERROR == ::listen(listenfd, 16)) sysdie("listen failed.");
 
-    LOG(1) << "Listening on " << bindIp << ":" << bindPort << std::endl;
+    rlog.info("Listening on {}:{}"_format(bindIp, bindPort));
 #ifndef ___NO_THREAD_POOL
     ThreadPool pool;
 #endif
@@ -253,7 +252,7 @@ Socks5Connection::addr_info Socks5Connection::connect_pkgs()
     std::tie(CMD, ATYP, remoteInfo) = unpackConnectionPacket(buf);
     //rlib::scope_guard remoteInfoGuarder = [&](){free(remoteInfo.payload.str);};
     if (CMD != 01)
-        die("Socks5 request can not be processed.(CMD=%d)", (int) CMD);
+        die("Socks5 request can not be processed.(CMD={})"_format((int)CMD));
 
     //Make success reply.
     buf[1] = 0;
@@ -269,12 +268,12 @@ Socks5Connection::addr_info Socks5Connection::dns_pkgs(SnakeConnection &nextHop,
     if(rawAddr.type != addr_info::addr_t::domain)
         return rawAddr;
     auto pkg = rawAddr.make_dns_query_body();
-    LOG(3) << rawAddr.print() << std::endl;
+    rlog.debug(rawAddr.print());
 
     // Send first data pack (DNS)
     binary_safe_string firstPack = m_server.skserver.mod.encode(pkg.payload, nextHop.GetConnInfo(), pkg);
     defer([&]{std::free(firstPack.str);});
-    LOG(3) << "DNS pack to send: len=" << firstPack.length << std::endl;
+    rlog.debug("DNS pack to send: len={}"_format(firstPack.length));
     auto lengthNetByte = htonl(firstPack.length);
     nextHop.sendn(&lengthNetByte, sizeof(firstPack.length));
     nextHop.sendn(firstPack.str, firstPack.length);
@@ -288,9 +287,10 @@ Socks5Connection::addr_info Socks5Connection::dns_pkgs(SnakeConnection &nextHop,
     client_query dnsResponse = m_server.skserver.mod.decode(firstReturnPack, nextHop.GetConnInfo());
 
     addr_info goodaddr(reinterpret_cast<std::array<uint8_t, 16>&>(dnsResponse.destination_ip), rawAddr.getport());
-    LOG(3) << "dns raw responce: " << goodaddr.print() << std::endl;
+
+    rlog.debug("dns raw responce: {}"_format(goodaddr.print()));
     goodaddr.try_6to4();
-    LOG(3) << "dns responce:" << goodaddr.print() << std::endl;
+    rlog.debug("dns responce: {}"_format(goodaddr.print()));
     // First data pack done.
     return goodaddr;
 }
@@ -321,8 +321,9 @@ void Socks5Connection::passData(SnakeConnection &nextHop, const addr_info &resol
             defer([&](){std::free(encodedDat.str);});
             auto lengthBackup = encodedDat.length;
             encodedDat.length = htonl(encodedDat.length);
-            LOG(3) << "Data pack to send: len=" << lengthBackup << std::endl;
-            LOG(4) << NetLib::printData(encodedDat.str, lengthBackup) << std::endl;
+            rlog.debug("Data pack to send: len="_format(lengthBackup));
+            // Maybe too expensive
+            //rlog.log(NetLib::printData(encodedDat.str, lengthBackup), super_debug);
             nextHop.sendn(&encodedDat.length, sizeof(encodedDat.length));
             nextHop.sendn(encodedDat.str, lengthBackup);
         }
@@ -335,8 +336,8 @@ void Socks5Connection::passData(SnakeConnection &nextHop, const addr_info &resol
             if (binLen == 0) goto _close_conn;
             void *bridgeBuffer = malloc(binLen);
             nextHop.recvn_and_free_on_err(bridgeBuffer, binLen);
-            LOG(3) << "Data pack recv:len=" << binLen << std::endl;
-            LOG(4) << NetLib::printData(bridgeBuffer, binLen) << std::endl;
+            rlog.debug("Data pack recv:len={}"_format(binLen));
+            //rlog.log(NetLib::printData(bridgeBuffer, binLen), super_debug);
             auto decodedDat = m_server.skserver.mod.decode(binary_safe_string{false, binLen, (char *) bridgeBuffer}, nextHop.GetConnInfo()).payload;
             defer([&](){free(decodedDat.str);});
             sockIO::sendn_ex(m_fd, decodedDat.str, decodedDat.length, MSG_NOSIGNAL);

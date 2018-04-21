@@ -11,7 +11,7 @@ raise an exception on some rare ill formed arguments.
 
 #include <rlib/require/cxx14>
 #include <rlib/class_decorator.hpp>
-#include <rlib/string/string.hpp>
+#include <rlib/string.hpp>
 #include <rlib/scope_guard.hpp>
 
 #include <string>
@@ -20,6 +20,7 @@ raise an exception on some rare ill formed arguments.
 #include <stdexcept>
 
 namespace rlib {
+    using rlib::literals::operator "" _format;
     class opt_parser : private noncopyable
     {
     public:
@@ -41,7 +42,7 @@ namespace rlib {
                 return false;
             });
             if(required && pos == args.cend())
-                throw std::invalid_argument(format_string("Required argument '{}' not provided.", argName));
+                throw std::invalid_argument("Required argument '{}' not provided."_format(argName));
             if(pos == args.cend())
                 return std::move(std::string(""));
             defer(([&, pos]{if(!useEqualSym) args.erase(pos+1); args.erase(pos);}));
@@ -50,7 +51,7 @@ namespace rlib {
             else
             {
                 if(++pos == args.cend())
-                    throw std::invalid_argument(format_string("Argument '{}' must provide value.", argName));
+                    throw std::invalid_argument("Argument '{}' must provide value."_format(argName));
                 return *pos;
             }
         }
@@ -75,7 +76,7 @@ namespace rlib {
             
             std::string value = valueL.empty() ? valueS : valueL;
             if(required && value.empty())
-                throw std::invalid_argument(format_string("Required argument '{}/{}' not provided.", longName, shortName));
+                throw std::invalid_argument("Required argument '{}/{}' not provided."_format(longName, shortName));
             return value;
         }
 

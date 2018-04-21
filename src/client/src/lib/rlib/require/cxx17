@@ -1,6 +1,11 @@
 #ifndef R_CXX17_REQUIRED
 #define R_CXX17_REQUIRED
 
-#include <bits/c++17_warning.h>
+#if __cplusplus <= 201402L
+#error This file requires compiler and library support \
+for the ISO C++ 2017 standard. This support must be enabled \
+with the -std=c++17, -std=gnu++17, -std=c++1z, -std=gnu++1z \
+compiler options.
+#endif
 
 #endif

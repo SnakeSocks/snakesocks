@@ -11,7 +11,8 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-int _runtime_debugLevel;
+
+rlib::logger rlog(std::cout);
 
 using namespace std;
 using rlib::println;
@@ -19,8 +20,23 @@ using rlib::print;
 
 int main_proc(config &&conf)
 {
-    _runtime_debugLevel = conf.debugLevel;
-    println("Setting debug level = ", _runtime_debugLevel);
+    switch(conf.debugLevel) {
+        case 0:
+            rlog.set_log_level(rlib::log_level_t::FATAL);
+            break;
+        case 1:
+            rlog.set_log_level(rlib::log_level_t::ERROR);
+            break;
+        case 2:
+            rlog.set_log_level(rlib::log_level_t::INFO);
+            break;
+        case 3:
+        case 4: // super_debug mode is removed.
+            rlog.set_log_level(rlib::log_level_t::DEBUG);
+            break;
+        default:
+            die("Unknown log_level {}."_format(conf.debugLevel));
+    }
     client_module mod(conf.modulePath);
     Socks5Server sss(conf.bindIp, conf.bindPort, tunnel(conf.serverIp, conf.serverPort, conf.passphrase, std::move(mod), conf.retryResolve));
     sss.listen();
@@ -35,7 +51,7 @@ void display_usage()
 #ifdef SKCLI_VERSION
             " " RLIB_MACRO_TO_CSTR(SKCLI_VERSION)
 #endif
-#ifdef WIN32
+#if RLIB_OS_ID == OS_WINDOWS
             " Windows Edition"
 #endif
             n
@@ -56,11 +72,11 @@ void display_usage()
             "-k --passphrase <passphrase>    Passphrase" n
             "-L --listen <listen address>    Local address that socks5 server listens on" n
             "-P --listen-port <listen port>  Local port that socks5 server listens on" n
-            "-D --debug <debug level>        Debug level to set (1/2/3/4)" n
+            "-D --debug <debug level>        Debug level to set (0/1/2/3/4)" n
             "-m --mod <path to module>       Module path" n
             "   --retry                      Retry infinitely if a domain cannot be resolved"
             n
-#ifdef WIN32
+#if RLIB_OS_ID == OS_WINDOWS
             "-c --conf <config file path>    Path to config file(default: conf\\client.conf)" n
             "                                    Use '-c NULL' to prevent me from looking for client.conf" n
 #else
@@ -116,7 +132,7 @@ int wrapped_main(int arglen, char **argv)
     }
     else
     {
-#ifdef WIN32
+#if RLIB_OS_ID == OS_WINDOWS
         conf.load(confPath.empty() ? std::string("conf\\client.conf") : confPath);
 #else
         conf.load(confPath.empty() ? std::string("/etc/snakesocks/conf/client.conf") : confPath);
@@ -135,23 +151,24 @@ int wrapped_main(int arglen, char **argv)
 
     if(asDaemon)
     {
-#ifdef WIN32 
+#if RLIB_OS_ID == OS_WINDOWS 
         die("Daemon mode is not supported on Windows.");
 #else
-        const char *logFile = conf.daemonLogFile.c_str();
+        rlog = rlib::logger(conf.daemonLogFile);
+//        const char *logFile = conf.daemonLogFile.c_str();
 
         //redirect stdout/stderr to file
-        int out = open(logFile, O_RDWR|O_CREAT|O_APPEND, 0600);
-        if (-1 == out) { sysdie("Failed to open log file {}", logFile); }
-
-        int err = open(logFile, O_RDWR|O_CREAT|O_APPEND, 0600);
-        if (-1 == err) { sysdie("Failed to open log file {}", logFile); }
-
-        int save_out = dup(fileno(stdout));
-        int save_err = dup(fileno(stderr));
-
-        if (-1 == dup2(out, fileno(stdout))) { sysdie("Failed to redirect stdout"); }
-        if (-1 == dup2(err, fileno(stderr))) { sysdie("Failed to redirect stderr"); }
+//        int out = open(logFile, O_RDWR|O_CREAT|O_APPEND, 0600);
+//        if (-1 == out) { sysdie("Failed to open log file"s + logFile); }
+//
+//        int err = open(logFile, O_RDWR|O_CREAT|O_APPEND, 0600);
+//        if (-1 == err) { sysdie("Failed to open log file"s + logFile); }
+//
+//        int save_out = dup(fileno(stdout));
+//        int save_err = dup(fileno(stderr));
+//
+//        if (-1 == dup2(out, fileno(stdout))) { sysdie("Failed to redirect stdout"); }
+//        if (-1 == dup2(err, fileno(stderr))) { sysdie("Failed to redirect stderr"); }
 
         if(daemon(0, 1) == -1) sysdie("Failed to launch daemon.");
 #endif
@@ -162,7 +179,8 @@ int wrapped_main(int arglen, char **argv)
 
 int main(int arglen, char **argv)
 {
-#ifdef WIN32
+    rlog.set_log_level(rlib::log_level_t::DEBUG);
+#if RLIB_OS_ID == OS_WINDOWS
 	//WIN32 cannot deal with exception elegently. catch them!
 	try { wrapped_main(arglen, argv); }
 	catch (std::exception &e) 

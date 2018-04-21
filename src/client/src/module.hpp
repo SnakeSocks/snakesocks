@@ -7,7 +7,7 @@
 #include "debug.hpp"
 #include "module-port.hpp"
 
-#ifndef WIN32
+#if RLIB_OS_ID != OS_WINDOWS
 #include <dlfcn.h>
 #else
 #include <windows.h>
@@ -31,7 +31,7 @@ public:
             so_handle(ano.so_handle) {ano.so_handle = nullptr;}
     ~client_module() {
         if(so_handle) 
-#ifndef WIN32
+#if RLIB_OS_ID != OS_WINDOWS
             dlclose(so_handle);
 #else
             FreeLibrary(so_handle);
@@ -54,7 +54,7 @@ private:
     std::function<decltype(port_c::client_encode)> _f_client_encode;
     std::function<decltype(port_c::client_decode)> _f_client_decode;
     std::function<decltype(port_c::client_connection_close)> _f_client_connection_close;
-#ifndef WIN32
+#if RLIB_OS_ID != OS_WINDOWS
     void *so_handle;
 #else
     HMODULE so_handle;

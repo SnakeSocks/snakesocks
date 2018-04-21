@@ -3,7 +3,7 @@
 
 #include <pthread.h>
 namespace rlib {    
-    class RWLock
+    [[deprecated]] class RWLock
     {
     public:
         RWLock() : isFree(true) {pthread_rwlock_init(&m_lock, NULL);}

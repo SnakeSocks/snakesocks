@@ -5,10 +5,20 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_definitions(-DCOMPILE_SS_MAIN_CLIENT)
 add_definitions(-D___NO_THREAD_POOL)
-add_definitions(-DSKCLI_VERSION=1.3.1)
+add_definitions(-DSKCLI_VERSION=1.3.1.2)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -DMALLOC_CHECK_=2")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-user-defined-literals")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-literal-suffix -Wno-terminate")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+  # using Intel C++
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+  # using Visual Studio C++
+endif()
 
 string(TIMESTAMP _COMPILE_TIME %Y-%m-%dT%H:%M:%SZ UTC)
 add_definitions(-DCOMPILE_TIME=${_COMPILE_TIME})

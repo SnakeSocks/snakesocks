@@ -1,8 +1,10 @@
 #ifndef R_CXX11_REQUIRED
 #define R_CXX11_REQUIRED
 
-#if __cplusplus < 201103L
-#error C++11 is required.
+#if __cplusplus <= 199711L
+#error This file requires compiler and library support \
+for the ISO C++ 2011 standard. This support must be enabled \
+with the -std=c++11 or -std=gnu++11 compiler options.
 #endif
 
 #endif
