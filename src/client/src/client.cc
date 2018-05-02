@@ -18,7 +18,7 @@ using namespace std;
 using rlib::println;
 using rlib::print;
 
-int main_proc(config &&conf)
+int skcli_main(config &&conf)
 {
     switch(conf.debugLevel) {
         case 0:
@@ -162,22 +162,20 @@ int wrapped_main(int arglen, char **argv)
         rlog = rlib::logger(conf.logFile);
     }
 
-    return main_proc(std::move(conf));
+    return skcli_main(std::move(conf));
 }
 
 int main(int arglen, char **argv)
 {
     rlog.set_log_level(rlib::log_level_t::DEBUG);
-#if RLIB_OS_ID == OS_WINDOWS
-	//WIN32 cannot deal with exception elegently. catch them!
+	// WIN32 cannot deal with exception elegently. catch them!
+    // Grap exception and print `fatal` log is also useful on linux
+    //     , so I'll apply this wrap for every os.
 	try { wrapped_main(arglen, argv); }
 	catch (std::exception &e) 
 	{
-        rlog.fatal("Uncaught Exception: ", e.what());
+        rlog.fatal("Uncaught Exception: {}"_format(e.what()));
 		return 2;
 	}
 	return 0;
-#else
-	return wrapped_main(arglen, argv);
-#endif
 }

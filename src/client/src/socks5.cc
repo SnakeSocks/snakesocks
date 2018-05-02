@@ -267,6 +267,7 @@ Socks5Connection::addr_info Socks5Connection::dns_pkgs(SnakeConnection &nextHop,
 {
     if(rawAddr.type != addr_info::addr_t::domain)
         return rawAddr;
+    auto domain_str = rawAddr.print(); // save its domain string for debug usage.
     auto pkg = rawAddr.make_dns_query_body();
     rlog.debug(rawAddr.print());
 
@@ -287,6 +288,8 @@ Socks5Connection::addr_info Socks5Connection::dns_pkgs(SnakeConnection &nextHop,
     client_query dnsResponse = m_server.skserver.mod.decode(firstReturnPack, nextHop.GetConnInfo());
 
     addr_info goodaddr(reinterpret_cast<std::array<uint8_t, 16>&>(dnsResponse.destination_ip), rawAddr.getport());
+    if(!goodaddr)
+        die("Can not resolve address `{}`"_format(domain_str));
 
     rlog.debug("dns raw responce: {}"_format(goodaddr.print()));
     goodaddr.try_6to4();
@@ -321,7 +324,7 @@ void Socks5Connection::passData(SnakeConnection &nextHop, const addr_info &resol
             defer([&](){std::free(encodedDat.str);});
             auto lengthBackup = encodedDat.length;
             encodedDat.length = htonl(encodedDat.length);
-            rlog.debug("Data pack to send: len="_format(lengthBackup));
+            rlog.debug("Data pack to send: len={}"_format(lengthBackup));
             // Maybe too expensive
             //rlog.log(NetLib::printData(encodedDat.str, lengthBackup), super_debug);
             nextHop.sendn(&encodedDat.length, sizeof(encodedDat.length));

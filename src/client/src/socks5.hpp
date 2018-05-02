@@ -4,6 +4,7 @@
 #include "tunnel.hpp"
 
 #include <string>
+#include <numeric>
 #include <algorithm>
 #include <rlib/class_decorator.hpp>
 #include "connection.hpp"
@@ -76,6 +77,10 @@ public:
         void setport(uint16_t port) {this->port = port;} //host byte seq.
         auto getport() {return port;}
 
+        bool operator!() const {
+            auto sum = std::accumulate(data.cbegin(), data.cend(), (char)0);
+            return sum == 0 || type == addr_t::null;
+        }
         void try_6to4() {
             if(type != addr_t::ipv6)
                 die("incorrect type.");
