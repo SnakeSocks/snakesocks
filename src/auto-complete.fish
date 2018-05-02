@@ -12,4 +12,4 @@ complete -c skcli -f -s m -l mod -a '(__fish_complete_path)' -d 'Module path'
 
 complete -c skcli -f -s c -l conf -a 'NULL /etc/snakesocks/conf/client.conf (__fish_complete_path)' -d 'Configuration file to load'
 complete -c skcli -f -s d -l daemon -d 'Run as daemon'
-complete -c skcli -f -s l -l daemon-log -a '/var/log/skcli.log (__fish_complete_path)' -d 'Log file for daemon mode'
+complete -c skcli -f -s l -l log -a 'stdout (__fish_complete_path)' -d 'Log file'

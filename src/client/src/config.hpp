@@ -22,7 +22,7 @@ public:
     string modulePath;
     bool retryResolve;
     int debugLevel;
-    string daemonLogFile;
+    string logFile;
     //http://www.boost.org/doc/libs/1_64_0/libs/property_tree/examples/debug_settings.cpp
     void load(const string &confPath)
     {
@@ -36,7 +36,7 @@ public:
         modulePath = tree.get<string>("core.module");
         retryResolve = tree.get<string>("core.nx_retry") == "true";
         debugLevel = tree.get("core.debugLevel", 1);
-        daemonLogFile = tree.get("core.daemonLogFile", std::string("/var/log/skcli.log"));
+        logFile = tree.get("core.logFile", std::string("stdout"));
     }
     void save(const string &confPath)
     {
@@ -49,7 +49,7 @@ public:
         tree.put("core.module", modulePath);
         tree.put("core.nx_retry", retryResolve ? "true" : "false");
         tree.put("core.debugLevel", debugLevel);
-        tree.put("core.daemonLogFile", daemonLogFile);
+        tree.put("core.logFile", logFile);
         pt::write_ini(confPath, tree);
     }
 };

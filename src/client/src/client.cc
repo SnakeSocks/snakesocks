@@ -78,12 +78,12 @@ void display_usage()
             n
 #if RLIB_OS_ID == OS_WINDOWS
             "-c --conf <config file path>    Path to config file(default: conf\\client.conf)" n
-            "                                    Use '-c NULL' to prevent me from looking for client.conf" n
+            "                                    Use '-c NULL' to prevent me looking for client.conf" n
 #else
             "-c --conf <config file path>    Path to config file(default: /etc/snakesocks/conf/client.conf)" n
-            "                                    Use '-c NULL' to prevent me from looking for client.conf" n
+            "                                    Use '-c NULL' to prevent me looking for client.conf" n
             "-d --daemon                     Run client as daemon" n
-            "-l --daemon-log <log file name> Log file for daemon mode(default: /var/log/skcli.log)" n
+            "-l --log <log file name>        Log file for daemon mode(default: stdout)" n
 #endif
             "-h --help                       Show this message" n n
             "Published on GNU license V2." n
@@ -104,7 +104,7 @@ int wrapped_main(int arglen, char **argv)
     bool asDaemon = args.getBoolArg("--daemon", "-d");
     bool retryResolve = args.getBoolArg("--retry");
     string confPath = args.getValueArg("--conf", "-c");
-    string daemonLogFilePath = args.getValueArg("--daemon-log", "-l");
+    string logFilePath = args.getValueArg("--log", "-l");
     string serverAddr = args.getValueArg("--server", "-s");
     string serverPort = args.getValueArg("--server-port", "-p");
     string passP = args.getValueArg("--passphrase", "-k");
@@ -114,13 +114,13 @@ int wrapped_main(int arglen, char **argv)
     string modPath = args.getValueArg("--mod", "-m");
 
     if(!args.allArgDone())
-        println("Warning: some ill formed arguments are ignored.");
+        rlog.warn("Some ill formed arguments are ignored.");
 
     config conf;
     if(confPath == "NULL")
     { // NO configuration file.
-        println("No config mode.");
-        conf.daemonLogFile = daemonLogFilePath.empty() ? daemonLogFilePath : std::string("/var/log/skcli.log"); //Not required.
+        rlog.info("No config mode.");
+        conf.logFile = logFilePath.empty() ? logFilePath : std::string("/var/log/skcli.log"); //Not required.
 
         if(serverAddr.empty()) die("servAddr not set."); conf.serverIp = serverAddr;
         if(serverPort.empty()) die("servPort not set."); conf.serverPort = (uint16_t)stoi(serverPort);
@@ -137,7 +137,7 @@ int wrapped_main(int arglen, char **argv)
 #else
         conf.load(confPath.empty() ? std::string("/etc/snakesocks/conf/client.conf") : confPath);
 #endif
-        if(!daemonLogFilePath.empty()) conf.daemonLogFile = daemonLogFilePath;
+        if(!logFilePath.empty()) conf.logFile = logFilePath;
         if(!serverAddr.empty()) conf.serverIp = serverAddr;
         if(!serverPort.empty()) conf.serverPort = (uint16_t)stoi(serverPort);
         if(!passP.empty()) conf.passphrase = passP;
@@ -154,24 +154,12 @@ int wrapped_main(int arglen, char **argv)
 #if RLIB_OS_ID == OS_WINDOWS 
         die("Daemon mode is not supported on Windows.");
 #else
-        rlog = rlib::logger(conf.daemonLogFile);
-//        const char *logFile = conf.daemonLogFile.c_str();
-
-        //redirect stdout/stderr to file
-//        int out = open(logFile, O_RDWR|O_CREAT|O_APPEND, 0600);
-//        if (-1 == out) { sysdie("Failed to open log file"s + logFile); }
-//
-//        int err = open(logFile, O_RDWR|O_CREAT|O_APPEND, 0600);
-//        if (-1 == err) { sysdie("Failed to open log file"s + logFile); }
-//
-//        int save_out = dup(fileno(stdout));
-//        int save_err = dup(fileno(stderr));
-//
-//        if (-1 == dup2(out, fileno(stdout))) { sysdie("Failed to redirect stdout"); }
-//        if (-1 == dup2(err, fileno(stderr))) { sysdie("Failed to redirect stderr"); }
-
         if(daemon(0, 1) == -1) sysdie("Failed to launch daemon.");
 #endif
+    }
+    if(conf.logFile != "stdout") {
+        rlog.info("Log redirected to {}."_format(conf.logFile));
+        rlog = rlib::logger(conf.logFile);
     }
 
     return main_proc(std::move(conf));
@@ -185,7 +173,7 @@ int main(int arglen, char **argv)
 	try { wrapped_main(arglen, argv); }
 	catch (std::exception &e) 
 	{
-        println("Uncaught Exception: ", e.what());
+        rlog.fatal("Uncaught Exception: ", e.what());
 		return 2;
 	}
 	return 0;
