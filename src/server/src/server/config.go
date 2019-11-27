@@ -15,7 +15,7 @@ var Passphrase string
 
 func initConfig() error {
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "SnakeSocks Server 1.3.1\n\n")
+		fmt.Fprintf(os.Stderr, "SnakeSocks Server 1.3.1.3\n\n")
 		flag.PrintDefaults()
 		fmt.Fprintf(os.Stderr, "\nPublished on GNU license V2.\n")
 	}
@@ -23,7 +23,7 @@ func initConfig() error {
 	flag.IntVar(&Port, "p", 8080, "server monitor port")
 	flag.IntVar(&Debug, "d", 2, "debug level(1,2,3)")
 	flag.StringVar(&DylibPath, "l", "/etc/snakesocks/modules/sample.so", "dynamic library path")
-	flag.StringVar(&Passphrase, "", "", "the passphrase for encypt")
+	flag.StringVar(&Passphrase, "k", "", "the passphrase for encrypt")
 	flag.Parse()
 
 	cfg, err := ini.Load(ConfigPath)
