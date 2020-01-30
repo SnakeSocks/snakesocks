@@ -44,9 +44,11 @@ set(CLIENT_SRC src/client.cc src/socks5.cc src/tunnel.cc src/module.cc src/lib/N
 set(SERVER_SRC src/server.cc src/socks5.cc src/tunnel.cc src/module.cc src/lib/NetLib.cc)
 
 add_executable(skcli ${CLIENT_SRC})
+target_link_libraries(skcli -static-libgcc -static-libstdc++)
 target_link_libraries(skcli Threads::Threads Boost::system dl)
 
 add_executable(sksrv ${SERVER_SRC})
+target_link_libraries(sksrv -static-libgcc -static-libstdc++)
 target_link_libraries(sksrv Threads::Threads Boost::system dl)
 
 #if(FOR_M32)

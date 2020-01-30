@@ -40,12 +40,14 @@ set(CLIENT_SRC src/client.cc src/socks5.cc src/tunnel.cc src/module.cc src/lib/N
 set(SERVER_SRC src/server.cc src/socks5.cc src/tunnel.cc src/module.cc src/lib/NetLib.cc)
 
 add_executable(skcli ${CLIENT_SRC})
+target_link_libraries(skcli -static-libgcc -static-libstdc++)
 target_link_libraries(skcli Threads::Threads)
 target_link_libraries(skcli "C:\\bash_home\\boost_1_64_0\\bin.v2\\libs\\system\\build\\gcc-mingw-6.3.0\\release\\link-static\\threading-multi\\libboost_system-mgw63-mt-1_64.a")
 target_link_libraries(skcli Ws2_32.lib)
 target_link_libraries(skcli psapi.lib)
 
 add_executable(sksrv ${CLIENT_SRC})
+target_link_libraries(sksrv -static-libgcc -static-libstdc++)
 target_link_libraries(sksrv Threads::Threads)
 target_link_libraries(sksrv "C:\\bash_home\\boost_1_64_0\\bin.v2\\libs\\system\\build\\gcc-mingw-6.3.0\\release\\link-static\\threading-multi\\libboost_system-mgw63-mt-1_64.a")
 target_link_libraries(sksrv Ws2_32.lib)

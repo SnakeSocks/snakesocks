@@ -27,5 +27,6 @@ cp src/native/skcli $rel/ &&
 cp src/native/sksrv $rel/ &&
 cd src/modules && make se_proxy && cd - && 
 cp src/modules/se_proxy.so $rel/mods/ &&
+strip $rel/skcli $rel/sksrv &&
 echo 'done.' || (echo 'failed.' ; exit 1)
 

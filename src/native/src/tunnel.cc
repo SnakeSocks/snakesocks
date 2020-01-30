@@ -264,7 +264,7 @@ void inbound_tunnel::dealConnection(sockfd_t connfd) const {
         rlog.error("Connection {} caught exception: {}", connfd, e.what());
     }
     rlog.info("Connection {} closed.", connfd);
-
+    close(connfd);
 }
 
 [[noreturn]] void inbound_tunnel::listen() const
