@@ -184,6 +184,7 @@ void inbound_tunnel::dealConnectionImpl(sockfd_t connfd) const
     }
 
     rlib_defer([&]{mod.server.onCloseConn(&myConnInfo);});
+    rlib_defer([&]{if(nextHopConn != -1) close(nextHopConn);});
 
     // data exchange begin
     //
@@ -263,8 +264,9 @@ void inbound_tunnel::dealConnection(sockfd_t connfd) const {
     catch(std::exception &e) {
         rlog.error("Connection {} caught exception: {}", connfd, e.what());
     }
+
+    close(connfd);           
     rlog.info("Connection {} closed.", connfd);
-    close(connfd);
 }
 
 [[noreturn]] void inbound_tunnel::listen() const
