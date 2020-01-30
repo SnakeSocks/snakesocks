@@ -33,9 +33,13 @@ typedef struct _connect_info
 } connect_info;
 typedef struct _client_query {
     uint8_t destination_ip[16];
-    uint16_t destination_port;
+    uint16_t destination_port; // encode/decode function should take care that, this port is in NATIVE byteorder, NOT NETWORK byteorder.
     binary_safe_string payload;// data pack to be sent to dest
 }client_query;*/
+
+// TODO: design improvement:
+// client_query should be `packet_type::freeworld`.
+// binary_safe_string should be `packet_type::encrypted`.
 
 // updated file structure for better util programming.
 
@@ -54,7 +58,7 @@ typedef struct _client_query {
  *
  * For `client_encode` and `client_decode`:
  * You can either malloc/calloc a new binary_safe_string to return and free `data`, or edit `data` and return it.
- * I'll free returned string only once, and never free `data` passed to client_(en/de)code.
+ * I'll free returned string only once, and never free `data` passed to client_(en/de)code. // TODO: make caller free the arg in the future.
  * 
  * NOTICE: ALL FUNCTIONS BELOW MUST BE THREAD-SAFE!
  */
@@ -67,7 +71,7 @@ void client_connection_close(connect_info *); //Be caution: this function may be
 // Server-side function declaration
 // The agreement is mainly the same as client-side function.
 // For `server_make_auth_reply`:
-// You must free the binary_safe_string pass to you, I'll never free it.
+// You must free the binary_safe_string pass to you, I'll never free it. // TODO: Remove this line, make caller free the arg, since the caller created it.
 binary_safe_string server_make_auth_reply(connect_info *, binary_safe_string, bool * is_closing);
 binary_safe_string server_encode(connect_info *, client_query payload);
 client_query server_decode(connect_info *,binary_safe_string data);

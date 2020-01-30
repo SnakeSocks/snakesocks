@@ -8,6 +8,8 @@ Due to our test, it may have less latency but smaller bandwidth than sha*owsocks
 
 Tip: 'client' is 'client for linux/unix' if not specially instructed.
 
+## WARNING: Snakesocks 1.4.0 Changed the API, so sksrv with version<1.4.0 doesn't work anymore. See CHANGELOG.md
+
 ## Dependencies
 
 - Runtime

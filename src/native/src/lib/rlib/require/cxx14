@@ -1,0 +1,12 @@
+#ifndef R_CXX14_REQUIRED
+#define R_CXX14_REQUIRED
+
+#include <rlib/sys/os.hpp>
+
+#if RLIB_CXX_STD <= 2011
+#error This file requires compiler and library support \
+for the ISO C++ 2014 standard. This support must be enabled \
+with the -std=c++14 or -std=gnu++14 compiler options.
+#endif
+
+#endif

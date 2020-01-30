@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  install:
+    run-as: root
+    commands:
+      - make install
+  pre_build:
+    commands:
+      - g++ --version
+      - clang++ --version
+      - icpc --version
+  build:
+    commands:
+      - make
+      - make test
+
